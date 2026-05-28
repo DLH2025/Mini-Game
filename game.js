@@ -794,46 +794,47 @@ class Game {
     
     // 处理AI玩家的攻击
     processAIAttacks() {
-        if (!this.players[1] || !this.players[1].currentAction) return;
+        if (!this.players[1]) return;
         
         const ai = this.players[1];
         
-        switch (ai.currentAction) {
-            case 'melee':
-                // 近战攻击会在AI逻辑中处理
-                break;
-            case 'ranged':
-                // 检查是否有攻击动画，避免重复发射
-                if (!ai.isShooting || ai.attackFrame % 12 === 0) {
-                    const attack = ai.rangedAttack();
-                    if (attack) {
-                        this.bullets.push(new Bullet(attack.x, attack.y, attack.direction, attack.damage, attack.owner, ai.colorConfig));
+        // 处理远程射击
+        if (ai.needsToShoot) {
+            ai.needsToShoot = false;
+            const attack = ai.rangedAttack();
+            if (attack) {
+                this.bullets.push(new Bullet(attack.x, attack.y, attack.direction, attack.damage, attack.owner, ai.colorConfig));
+            }
+        }
+        
+        // 处理技能使用
+        if (ai.currentAction) {
+            switch (ai.currentAction) {
+                case 'heal':
+                    if (ai.skill1Cooldown <= 0) {
+                        if (ai.skill1()) {
+                            this.createHealingEffect(ai);
+                        }
                     }
-                }
-                break;
-            case 'heal':
-                if (ai.skill1Cooldown <= 0) {
-                    if (ai.skill1()) {
-                        this.createHealingEffect(ai);
+                    break;
+                case 'dash':
+                    if (ai.skill2Cooldown <= 0) {
+                        if (ai.skill2(this.obstacleManager.obstacles)) {
+                            this.createDashEffect(ai);
+                        }
                     }
-                }
-                break;
-            case 'dash':
-                if (ai.skill2Cooldown <= 0) {
-                    if (ai.skill2(this.obstacleManager.obstacles)) {
-                        this.createDashEffect(ai);
+                    break;
+                case 'blast':
+                    if (ai.skill3Cooldown <= 0) {
+                        const blast = ai.skill3();
+                        if (blast) {
+                            this.createBlastEffect(ai);
+                            this.processBlast(blast, this.players[0], ai);
+                        }
                     }
-                }
-                break;
-            case 'blast':
-                if (ai.skill3Cooldown <= 0) {
-                    const blast = ai.skill3();
-                    if (blast) {
-                        this.createBlastEffect(ai);
-                        this.processBlast(blast, this.players[0], ai);
-                    }
-                }
-                break;
+                    break;
+            }
+            ai.currentAction = null;
         }
     }
 
