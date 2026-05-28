@@ -1,0 +1,17 @@
+        // 更新玩家
+        this.players.forEach(player => {
+            const prevX = player.x;
+            const prevY = player.y;
+            
+            // 如果是AI玩家，更新AI决策
+            if (this.gameMode === 'single' && player.id === 2) {
+                player.setBullets(this.bullets);
+                player.updateAI();
+                player.update(); // AI玩家的update不需要参数
+            } else {
+                // 人类玩家
+                player.update(this.keys);
+            }
+            
+            this.obstacleManager.checkCollisions(player, prevX, prevY);
+        });

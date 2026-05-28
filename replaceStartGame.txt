@@ -1,0 +1,33 @@
+        // 根据模式创建玩家2
+        if (this.gameMode === 'single') {
+            // AI玩家
+            this.players[1] = new AIPlayer(1250, 400, this.createColorConfig(this.player2Color, 'blue'), {
+                up: 'ArrowUp',
+                down: 'ArrowDown',
+                left: 'ArrowLeft',
+                right: 'ArrowRight',
+                melee: 'Numpad1',
+                ranged: 'Numpad2',
+                defend: 'Numpad3',
+                skill1: 'Numpad4',
+                skill2: 'Numpad5',
+                skill3: 'Numpad6'
+            }, 2, this.healthLimit, this.difficulty);
+            // 设置AI目标和游戏引用
+            this.players[1].setTarget(this.players[0]);
+            this.players[1].setGameReference(this);
+        } else {
+            // 双人模式：人类玩家
+            this.players[1] = new Player(1250, 400, this.createColorConfig(this.player2Color, 'blue'), {
+                up: 'ArrowUp',
+                down: 'ArrowDown',
+                left: 'ArrowLeft',
+                right: 'ArrowRight',
+                melee: 'Numpad1',
+                ranged: 'Numpad2',
+                defend: 'Numpad3',
+                skill1: 'Numpad4',
+                skill2: 'Numpad5',
+                skill3: 'Numpad6'
+            }, 2, this.healthLimit);
+        }

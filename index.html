@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>像素机甲对战</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div id="startScreen" class="screen">
+            <h1 class="title pixel-text">⚡ 像素机甲对战 ⚡</h1>
+            <div class="main-buttons">
+                <button id="singlePlayerBtn" class="pixel-btn">👤 单人模式</button>
+                <button id="twoPlayerBtn" class="pixel-btn">👥 双人模式</button>
+                <button id="settingsBtn" class="pixel-btn">⚙️ 游戏设置</button>
+            </div>
+        </div>
+        
+        <!-- 难度选择界面 -->
+        <div id="difficultyScreen" class="screen hidden">
+            <h1 class="title pixel-text">选择难度</h1>
+            <div class="main-buttons">
+                <button id="easyBtn" class="pixel-btn difficulty-btn">🟢 简单</button>
+                <button id="normalBtn" class="pixel-btn difficulty-btn">🟡 普通</button>
+                <button id="hardBtn" class="pixel-btn difficulty-btn">🔴 困难</button>
+                <button id="backToStartBtn" class="pixel-btn">↩️ 返回</button>
+            </div>
+        </div>
+        
+        <!-- 游戏设置弹窗 -->
+        <div id="settingsModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="pixel-text">游戏设置</h2>
+                    <button id="closeModalBtn" class="pixel-btn close">✕</button>
+                </div>
+                <div class="modal-tabs">
+                    <button id="controlsTab" class="pixel-btn tab active">📖 操作说明</button>
+                    <button id="gameplayTab" class="pixel-btn tab">🎮 游戏配置</button>
+                </div>
+                <div id="controlsPanel" class="modal-panel">
+                    <div class="controls-grid">
+                        <div class="player-controls">
+                            <h3 class="pixel-text red-text">玩家1 (红方)</h3>
+                            <p>W/A/S/D - 移动</p>
+                            <p>J - 近程攻击</p>
+                            <p>K - 远程攻击</p>
+                            <p>L - 防御</p>
+                            <p>U - 能量护盾 (治疗)</p>
+                            <p>I - 冲刺 (穿墙)</p>
+                            <p>O - 能量爆发 (范围伤害)</p>
+                        </div>
+                        <div class="player-controls">
+                            <h3 class="pixel-text blue-text">玩家2 (蓝方)</h3>
+                            <p>↑/↓/←/→ - 移动</p>
+                            <p>Num 1 - 近程攻击</p>
+                            <p>Num 2 - 远程攻击</p>
+                            <p>Num 3 - 防御</p>
+                            <p>Num 4 - 能量护盾 (治疗)</p>
+                            <p>Num 5 - 冲刺 (穿墙)</p>
+                            <p>Num 6 - 能量爆发 (范围伤害)</p>
+                        </div>
+                    </div>
+                    <div class="system-controls">
+                        <p class="system-hint">⚙️ 系统快捷键</p>
+                        <p>ESC - 暂停/继续</p>
+                        <p>R - 重新开始</p>
+                        <p>H - 返回主页</p>
+                    </div>
+                </div>
+                <div id="gameplayPanel" class="modal-panel hidden">
+                    <div class="system-controls">
+                        <p class="system-hint">🎮 游戏配置</p>
+                        <div class="health-setting">
+                            <label for="healthLimit" class="pixel-text">血量上限: <span id="healthLimitValue">200</span></label>
+                            <input type="range" id="healthLimit" min="50" max="500" value="200" step="10">
+                        </div>
+                    </div>
+                    <div class="system-controls" style="margin-top: 20px;">
+                        <p class="system-hint">🎨 玩家颜色</p>
+                        <div class="color-customization">
+                            <div class="color-option">
+                                <label class="pixel-text red-text">玩家1 (红方)</label>
+                                <div class="color-input-wrapper">
+                                    <input type="color" id="player1Color" value="#e94560">
+                                    <span class="color-preview" id="player1Preview" style="background: #e94560;"></span>
+                                </div>
+                            </div>
+                            <div class="color-option">
+                                <label class="pixel-text blue-text">玩家2 (蓝方)</label>
+                                <div class="color-input-wrapper">
+                                    <input type="color" id="player2Color" value="#4a9eff">
+                                    <span class="color-preview" id="player2Preview" style="background: #4a9eff;"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="system-controls" style="margin-top: 20px;">
+                        <p class="system-hint">🌞 显示模式</p>
+                        <div class="theme-toggle">
+                            <label class="pixel-text">选择主题</label>
+                            <div class="theme-buttons">
+                                <button id="dayThemeBtn" class="pixel-btn theme-btn day active">🌞 白天模式</button>
+                                <button id="nightThemeBtn" class="pixel-btn theme-btn night">🌙 黑夜模式</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="gameScreen" class="screen hidden">
+            <div class="game-ui">
+                <div class="health-bar-container">
+                    <span class="pixel-text red-text">红方</span>
+                    <div class="health-bar">
+                        <div id="health1" class="health-fill red"></div>
+                    </div>
+                    <span id="healthText1" class="pixel-text">200</span>
+                </div>
+                <div class="level-display">
+                    <span class="pixel-text">关卡: <span id="level">1</span></span>
+                </div>
+                <div class="health-bar-container">
+                    <span id="healthText2" class="pixel-text">200</span>
+                    <div class="health-bar">
+                        <div id="health2" class="health-fill blue"></div>
+                    </div>
+                    <span class="pixel-text blue-text">蓝方</span>
+                </div>
+            </div>
+            <canvas id="gameCanvas"></canvas>
+            <div class="skills-bottom">
+                <div class="skills-container-bottom">
+                    <div class="skill-item" id="skill1-p1">
+                        <span class="skill-icon">💚</span>
+                        <span class="skill-name">治疗</span>
+                        <span class="skill-key">U</span>
+                        <div class="skill-cooldown-overlay" id="skill1-cooldown-p1"></div>
+                    </div>
+                    <div class="skill-item" id="skill2-p1">
+                        <span class="skill-icon">⚡</span>
+                        <span class="skill-name">冲刺</span>
+                        <span class="skill-key">I</span>
+                        <div class="skill-cooldown-overlay" id="skill2-cooldown-p1"></div>
+                    </div>
+                    <div class="skill-item" id="skill3-p1">
+                        <span class="skill-icon">💥</span>
+                        <span class="skill-name">爆发</span>
+                        <span class="skill-key">O</span>
+                        <div class="skill-cooldown-overlay" id="skill3-cooldown-p1"></div>
+                    </div>
+                </div>
+                <div class="skills-container-bottom-right">
+                    <div class="skill-item" id="skill1-p2">
+                        <span class="skill-icon">💚</span>
+                        <span class="skill-name">治疗</span>
+                        <span class="skill-key">4</span>
+                        <div class="skill-cooldown-overlay" id="skill1-cooldown-p2"></div>
+                    </div>
+                    <div class="skill-item" id="skill2-p2">
+                        <span class="skill-icon">⚡</span>
+                        <span class="skill-name">冲刺</span>
+                        <span class="skill-key">5</span>
+                        <div class="skill-cooldown-overlay" id="skill2-cooldown-p2"></div>
+                    </div>
+                    <div class="skill-item" id="skill3-p2">
+                        <span class="skill-icon">💥</span>
+                        <span class="skill-name">爆发</span>
+                        <span class="skill-key">6</span>
+                        <div class="skill-cooldown-overlay" id="skill3-cooldown-p2"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="countdownOverlay" class="countdown-overlay hidden">
+                <div class="countdown-number" id="countdownNumber">3</div>
+                <p class="countdown-text">准备开始！</p>
+            </div>
+            <div id="pauseOverlay" class="pause-overlay hidden">
+                <div class="pause-container">
+                    <h2 class="pause-title">⏸️ 游戏暂停</h2>
+                    <button id="resumeBtn" class="pixel-btn pause-btn">▶️ 继续游戏 (ESC)</button>
+                    <button id="restartGameBtn" class="pixel-btn pause-btn">🔄 重新开始 (R)</button>
+                    <button id="homeBtn" class="pixel-btn pause-btn">🏠 返回主页 (H)</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="endScreen" class="screen hidden">
+            <div class="victory-container">
+                <h1 id="winnerText" class="title pixel-text">游戏结束</h1>
+                <div class="victory-decoration">
+                    <div class="star">★</div>
+                    <div class="star">★</div>
+                    <div class="star">★</div>
+                </div>
+                <p class="victory-subtitle pixel-text">恭喜获胜方！</p>
+                <button id="restartBtn" class="pixel-btn">
+                    🔄 重新开始
+                </button>
+                <p class="restart-hint pixel-text">或按 Enter 键重新开始</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="player.js"></script>
+    <script src="aiPlayer.js"></script>
+    <script src="bullet.js"></script>
+    <script src="obstacle.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
