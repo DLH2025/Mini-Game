@@ -28,6 +28,7 @@
             </div>
         </div>
         
+        <!-- 地图选择界面 -->
         <div id="mapSelectionScreen" class="screen hidden">
             <h1 class="title pixel-text">🏗️ 选择地图</h1>
             <p class="subtitle pixel-text">选择一个战场开始战斗</p>
@@ -40,100 +41,162 @@
         
         <!-- 游戏设置弹窗 -->
         <div id="settingsModal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="pixel-text">游戏设置</h2>
-                    <button id="closeModalBtn" class="pixel-btn close">✕</button>
-                </div>
-                <div class="modal-tabs">
-                    <button id="controlsTab" class="pixel-btn tab active">📖 操作说明</button>
-                    <button id="gameplayTab" class="pixel-btn tab">🎮 游戏配置</button>
-                </div>
-                <div id="controlsPanel" class="modal-panel">
-                    <div class="controls-grid">
-                        <div class="player-controls">
-                            <h3 class="pixel-text red-text">玩家1 (红方)</h3>
-                            <p>W/A/S/D - 移动</p>
-                            <p>J - 近程攻击</p>
-                            <p>K - 远程攻击</p>
-                            <p>L - 防御</p>
-                            <p>U - 能量护盾 (治疗)</p>
-                            <p>I - 冲刺 (穿墙)</p>
-                            <p>O - 能量爆发 (范围伤害)</p>
-                        </div>
-                        <div class="player-controls">
-                            <h3 class="pixel-text blue-text">玩家2 (蓝方)</h3>
-                            <p>↑/↓/←/→ - 移动</p>
-                            <p>Num 1 - 近程攻击</p>
-                            <p>Num 2 - 远程攻击</p>
-                            <p>Num 3 - 防御</p>
-                            <p>Num 4 - 能量护盾 (治疗)</p>
-                            <p>Num 5 - 冲刺 (穿墙)</p>
-                            <p>Num 6 - 能量爆发 (范围伤害)</p>
-                        </div>
+            <div class="settings-layout">
+                <!-- 左侧标签栏 -->
+                <div class="settings-sidebar">
+                    <div class="sidebar-header">
+                        <h2 class="pixel-text">游戏设置</h2>
+                        <button id="closeModalBtn" class="pixel-btn close">✕</button>
                     </div>
-                    <div class="system-controls">
-                        <p class="system-hint">⚙️ 系统快捷键</p>
-                        <p>ESC - 暂停/继续</p>
-                        <p>R - 重新开始</p>
-                        <p>H - 返回主页</p>
+                    <div class="sidebar-tabs">
+                        <button id="controlsTab" class="sidebar-tab active" data-tab="controls">
+                            <span class="tab-icon">📖</span>
+                            <span class="tab-text">操作说明</span>
+                        </button>
+                        <button id="gameplayTab" class="sidebar-tab" data-tab="gameplay">
+                            <span class="tab-icon">🎮</span>
+                            <span class="tab-text">游戏配置</span>
+                        </button>
+                        <button id="displayTab" class="sidebar-tab" data-tab="display">
+                            <span class="tab-icon">🎨</span>
+                            <span class="tab-text">画面</span>
+                        </button>
+                        <button id="soundTab" class="sidebar-tab" data-tab="sound">
+                            <span class="tab-icon">🔊</span>
+                            <span class="tab-text">声音</span>
+                        </button>
                     </div>
                 </div>
-                <div id="gameplayPanel" class="modal-panel hidden">
-                    <div class="system-controls">
-                        <p class="system-hint">🎮 游戏配置</p>
-                        <div class="health-setting">
-                            <label for="healthLimit" class="pixel-text">血量上限: <span id="healthLimitValue">200</span></label>
-                            <input type="range" id="healthLimit" min="50" max="500" value="200" step="10">
+                
+                <!-- 右侧内容区 -->
+                <div class="settings-main">
+                    <!-- 操作说明 -->
+                    <div id="controlsPanel" class="settings-content">
+                        <h3 class="content-title">操作说明</h3>
+                        <div class="controls-grid">
+                            <div class="player-controls">
+                                <h3 class="pixel-text red-text">玩家1 (红方)</h3>
+                                <p>W/A/S/D - 移动</p>
+                                <p>J - 近程攻击</p>
+                                <p>K - 远程攻击</p>
+                                <p>L - 防御</p>
+                                <p>U - 能量护盾 (治疗)</p>
+                                <p>I - 冲刺 (穿墙)</p>
+                                <p>O - 能量爆发 (范围伤害)</p>
+                            </div>
+                            <div class="player-controls">
+                                <h3 class="pixel-text blue-text">玩家2 (蓝方)</h3>
+                                <p>↑/↓/←/→ - 移动</p>
+                                <p>Num 1 - 近程攻击</p>
+                                <p>Num 2 - 远程攻击</p>
+                                <p>Num 3 - 防御</p>
+                                <p>Num 4 - 能量护盾 (治疗)</p>
+                                <p>Num 5 - 冲刺 (穿墙)</p>
+                                <p>Num 6 - 能量爆发 (范围伤害)</p>
+                            </div>
+                        </div>
+                        <div class="system-controls">
+                            <p class="system-hint">⚙️ 系统快捷键</p>
+                            <p>ESC - 暂停/继续</p>
+                            <p>R - 重新开始</p>
+                            <p>H - 返回主页</p>
                         </div>
                     </div>
-                    <div class="system-controls" style="margin-top: 20px;">
-                        <p class="system-hint">🎨 玩家颜色</p>
-                        <div class="color-customization">
-                            <div class="color-option">
-                                <label class="pixel-text red-text">玩家1 (红方)</label>
-                                <div class="color-input-wrapper">
-                                    <input type="color" id="player1Color" value="#e94560">
-                                    <span class="color-preview" id="player1Preview" style="background: #e94560;"></span>
+                    
+                    <!-- 游戏配置 -->
+                    <div id="gameplayPanel" class="settings-content hidden">
+                        <h3 class="content-title">游戏配置</h3>
+                        <div class="settings-rows">
+                            <div class="setting-row">
+                                <div class="setting-label">
+                                    <span class="setting-name">血量上限</span>
+                                    <span class="setting-value" id="healthLimitValue">200</span>
+                                </div>
+                                <div class="setting-control">
+                                    <input type="range" id="healthLimit" min="50" max="500" value="200" step="10">
                                 </div>
                             </div>
-                            <div class="color-option">
-                                <label class="pixel-text blue-text">玩家2 (蓝方)</label>
-                                <div class="color-input-wrapper">
-                                    <input type="color" id="player2Color" value="#4a9eff">
-                                    <span class="color-preview" id="player2Preview" style="background: #4a9eff;"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- 画面设置 -->
+                    <div id="displayPanel" class="settings-content hidden">
+                        <h3 class="content-title">画面设置</h3>
+                        <div class="settings-rows">
+                            <div class="setting-row">
+                                <div class="setting-label">
+                                    <span class="setting-name">玩家1颜色</span>
+                                </div>
+                                <div class="setting-control">
+                                    <div class="color-input-wrapper">
+                                        <input type="color" id="player1Color" value="#e94560">
+                                        <span class="color-preview" id="player1Preview" style="background: #e94560;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <div class="setting-label">
+                                    <span class="setting-name">玩家2颜色</span>
+                                </div>
+                                <div class="setting-control">
+                                    <div class="color-input-wrapper">
+                                        <input type="color" id="player2Color" value="#4a9eff">
+                                        <span class="color-preview" id="player2Preview" style="background: #4a9eff;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <div class="setting-label">
+                                    <span class="setting-name">显示模式</span>
+                                </div>
+                                <div class="setting-control">
+                                    <div class="theme-buttons">
+                                        <button id="dayThemeBtn" class="pixel-btn theme-btn day active">🌞 白天</button>
+                                        <button id="nightThemeBtn" class="pixel-btn theme-btn night">🌙 黑夜</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="system-controls" style="margin-top: 20px;">
-                        <p class="system-hint">🌞 显示模式</p>
-                        <div class="theme-toggle">
-                            <label class="pixel-text">选择主题</label>
-                            <div class="theme-buttons">
-                                <button id="dayThemeBtn" class="pixel-btn theme-btn day active">🌞 白天模式</button>
-                                <button id="nightThemeBtn" class="pixel-btn theme-btn night">🌙 黑夜模式</button>
+                    
+                    <!-- 声音设置 -->
+                    <div id="soundPanel" class="settings-content hidden">
+                        <h3 class="content-title">声音设置</h3>
+                        <div class="settings-rows">
+                            <div class="setting-row">
+                                <div class="setting-label">
+                                    <span class="setting-name">音效开关</span>
+                                </div>
+                                <div class="setting-control">
+                                    <button id="soundToggleBtn" class="pixel-btn toggle-btn active">🔊 开启</button>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="system-controls" style="margin-top: 20px;">
-                        <p class="system-hint">🔊 音效设置</p>
-                        <div class="sound-settings">
-                            <div class="sound-toggle">
-                                <label class="pixel-text">音效开关</label>
-                                <button id="soundToggleBtn" class="pixel-btn sound-btn active">🔊 开启</button>
+                            <div class="setting-row">
+                                <div class="setting-label">
+                                    <span class="setting-name">主音量</span>
+                                    <span class="setting-value" id="masterVolumeValue">50</span>
+                                </div>
+                                <div class="setting-control">
+                                    <input type="range" id="masterVolume" min="0" max="100" value="50" step="5">
+                                </div>
                             </div>
-                            <div class="volume-control">
-                                <label for="masterVolume" class="pixel-text">主音量: <span id="masterVolumeValue">50</span>%</label>
-                                <input type="range" id="masterVolume" min="0" max="100" value="50" step="5">
+                            <div class="setting-row">
+                                <div class="setting-label">
+                                    <span class="setting-name">音乐音量</span>
+                                    <span class="setting-value" id="musicVolumeValue">30</span>
+                                </div>
+                                <div class="setting-control">
+                                    <input type="range" id="musicVolume" min="0" max="100" value="30" step="5">
+                                </div>
                             </div>
-                            <div class="volume-control">
-                                <label for="sfxVolume" class="pixel-text">音效: <span id="sfxVolumeValue">70</span>%</label>
-                                <input type="range" id="sfxVolume" min="0" max="100" value="70" step="5">
-                            </div>
-                            <div class="volume-control">
-                                <label for="musicVolume" class="pixel-text">音乐: <span id="musicVolumeValue">30</span>%</label>
-                                <input type="range" id="musicVolume" min="0" max="100" value="30" step="5">
+                            <div class="setting-row">
+                                <div class="setting-label">
+                                    <span class="setting-name">音效音量</span>
+                                    <span class="setting-value" id="sfxVolumeValue">70</span>
+                                </div>
+                                <div class="setting-control">
+                                    <input type="range" id="sfxVolume" min="0" max="100" value="70" step="5">
+                                </div>
                             </div>
                         </div>
                     </div>

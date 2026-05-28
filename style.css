@@ -912,6 +912,360 @@ body.day-mode .volume-control input[type="range"] {
     color: #00ff88;
 }
 
+/* ========== 新版设置界面样式 ========== */
+
+/* 设置弹窗 - 全屏覆盖 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+/* 设置布局 - 左右分栏 */
+.settings-layout {
+    display: flex;
+    width: 90%;
+    max-width: 1000px;
+    height: 80vh;
+    max-height: 600px;
+    background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+    border: 3px solid #0f3460;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(15, 52, 96, 0.5);
+}
+
+/* 左侧边栏 */
+.settings-sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: rgba(0, 0, 0, 0.4);
+    border-right: 2px solid #0f3460;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 2px solid #0f3460;
+}
+
+.sidebar-header h2 {
+    color: #00ff88;
+    font-size: 20px;
+    margin: 0;
+    text-shadow: 2px 2px 0 #000;
+}
+
+.sidebar-header .close {
+    padding: 5px 12px;
+    min-width: auto;
+    font-size: 16px;
+    background: linear-gradient(180deg, #e94560 0%, #c73e54 100%);
+}
+
+/* 侧边栏标签 */
+.sidebar-tabs {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 8px;
+    flex: 1;
+}
+
+.sidebar-tab {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    color: #aaa;
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+}
+
+.sidebar-tab:hover {
+    background: rgba(15, 52, 96, 0.3);
+    color: #fff;
+}
+
+.sidebar-tab.active {
+    background: linear-gradient(90deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 255, 136, 0.05) 100%);
+    border-color: #00ff88;
+    color: #00ff88;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+}
+
+.tab-icon {
+    font-size: 20px;
+}
+
+.tab-text {
+    font-weight: bold;
+}
+
+/* 右侧主内容区 */
+.settings-main {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.settings-content {
+    animation: fadeIn 0.3s ease;
+}
+
+.settings-content.hidden {
+    display: none;
+}
+
+.content-title {
+    color: #00ff88;
+    font-size: 24px;
+    margin: 0 0 25px 0;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #0f3460;
+    text-shadow: 2px 2px 0 #000;
+}
+
+/* 设置行 - 仿照截图样式 */
+.settings-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.setting-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: all 0.2s;
+}
+
+.setting-row:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.setting-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.setting-name {
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.setting-value {
+    color: #00ff88;
+    font-size: 20px;
+    font-weight: bold;
+    min-width: 40px;
+    text-align: right;
+}
+
+.setting-control {
+    display: flex;
+    align-items: center;
+}
+
+.setting-control input[type="range"] {
+    width: 100%;
+    height: 8px;
+    -webkit-appearance: none;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+}
+
+.setting-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(180deg, #888 0%, #555 100%);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    border: 2px solid #aaa;
+}
+
+.setting-control input[type="range"]::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(180deg, #888 0%, #555 100%);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #aaa;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* 开关按钮 */
+.toggle-btn {
+    padding: 8px 24px;
+    min-width: 100px;
+    font-size: 16px;
+    background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+}
+
+.toggle-btn:not(.active) {
+    background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+}
+
+/* 主题按钮 */
+.theme-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.theme-btn {
+    padding: 10px 24px;
+    font-size: 16px;
+    min-width: auto;
+}
+
+/* 颜色选择器 */
+.color-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.color-input-wrapper input[type="color"] {
+    width: 50px;
+    height: 40px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 2px;
+    background: transparent;
+}
+
+.color-preview {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 白天模式适配 */
+body.day-mode .settings-layout {
+    background: linear-gradient(180deg, #f8fbff 0%, #e6f2ff 100%);
+    border-color: #4a9eff;
+}
+
+body.day-mode .settings-sidebar {
+    background: rgba(200, 230, 255, 0.3);
+    border-right-color: #4a9eff;
+}
+
+body.day-mode .sidebar-header h2 {
+    color: #2a6aaa;
+    text-shadow: none;
+}
+
+body.day-mode .sidebar-tab {
+    color: #555;
+}
+
+body.day-mode .sidebar-tab:hover {
+    background: rgba(74, 158, 255, 0.15);
+    color: #2a6aaa;
+}
+
+body.day-mode .sidebar-tab.active {
+    background: linear-gradient(90deg, rgba(74, 158, 255, 0.2) 0%, rgba(74, 158, 255, 0.05) 100%);
+    border-color: #4a9eff;
+    color: #2a6aaa;
+    box-shadow: 0 0 15px rgba(74, 158, 255, 0.2);
+}
+
+body.day-mode .content-title {
+    color: #2a6aaa;
+    border-bottom-color: #4a9eff;
+    text-shadow: none;
+}
+
+body.day-mode .setting-row {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.day-mode .setting-row:hover {
+    background: rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+body.day-mode .setting-name {
+    color: #333;
+    text-shadow: none;
+}
+
+body.day-mode .setting-value {
+    color: #2a6aaa;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .settings-layout {
+        flex-direction: column;
+        width: 95%;
+        height: 90vh;
+    }
+    
+    .settings-sidebar {
+        width: 100%;
+        min-width: auto;
+        border-right: none;
+        border-bottom: 2px solid #0f3460;
+    }
+    
+    .sidebar-tabs {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .sidebar-tab {
+        flex: 1;
+        min-width: 120px;
+        justify-content: center;
+    }
+    
+    .settings-main {
+        padding: 20px;
+    }
+}
+
 body.day-mode .health-setting label {
     color: #2a6aaa;
 }

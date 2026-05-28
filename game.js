@@ -268,10 +268,6 @@ class Game {
         const settingsModal = document.getElementById('settingsModal');
         const settingsBtn = document.getElementById('settingsBtn');
         const closeModalBtn = document.getElementById('closeModalBtn');
-        const controlsTab = document.getElementById('controlsTab');
-        const gameplayTab = document.getElementById('gameplayTab');
-        const controlsPanel = document.getElementById('controlsPanel');
-        const gameplayPanel = document.getElementById('gameplayPanel');
         
         settingsBtn.addEventListener('click', () => {
             settingsModal.classList.remove('hidden');
@@ -287,22 +283,33 @@ class Game {
             }
         });
         
-        const switchTab = (tab) => {
-            if (tab === 'controls') {
-                controlsTab.classList.add('active');
-                gameplayTab.classList.remove('active');
-                controlsPanel.classList.remove('hidden');
-                gameplayPanel.classList.add('hidden');
-            } else {
-                gameplayTab.classList.add('active');
-                controlsTab.classList.remove('active');
-                gameplayPanel.classList.remove('hidden');
-                controlsPanel.classList.add('hidden');
-            }
+        // 新版侧边栏标签切换
+        const sidebarTabs = document.querySelectorAll('.sidebar-tab');
+        const settingsContents = document.querySelectorAll('.settings-content');
+        
+        const switchTab = (tabName) => {
+            sidebarTabs.forEach(tab => {
+                if (tab.dataset.tab === tabName) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            settingsContents.forEach(content => {
+                if (content.id === tabName + 'Panel') {
+                    content.classList.remove('hidden');
+                } else {
+                    content.classList.add('hidden');
+                }
+            });
         };
         
-        controlsTab.addEventListener('click', () => switchTab('controls'));
-        gameplayTab.addEventListener('click', () => switchTab('gameplay'));
+        sidebarTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                switchTab(tab.dataset.tab);
+            });
+        });
         
         const healthLimitInput = document.getElementById('healthLimit');
         const healthLimitValue = document.getElementById('healthLimitValue');
