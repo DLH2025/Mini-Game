@@ -28,6 +28,16 @@
             </div>
         </div>
         
+        <div id="mapSelectionScreen" class="screen hidden">
+            <h1 class="title pixel-text">🏗️ 选择地图</h1>
+            <p class="subtitle pixel-text">选择一个战场开始战斗</p>
+            <div id="mapGrid" class="map-grid"></div>
+            <div class="main-buttons" style="margin-top: 20px;">
+                <button id="randomMapBtn" class="pixel-btn">🎲 随机地图</button>
+                <button id="backFromMapBtn" class="pixel-btn">↩️ 返回</button>
+            </div>
+        </div>
+        
         <!-- 游戏设置弹窗 -->
         <div id="settingsModal" class="modal hidden">
             <div class="modal-content">
@@ -189,21 +199,11 @@
         
         <div id="endScreen" class="screen hidden">
             <div class="victory-container">
-                <h1 id="winnerText" class="title pixel-text">游戏结束</h1>
-                <div class="victory-decoration">
-                    <div class="star">★</div>
-                    <div class="star">★</div>
-                    <div class="star">★</div>
-                </div>
-                <p class="victory-subtitle pixel-text">恭喜获胜方！</p>
-                <button id="restartBtn" class="pixel-btn">
-                    🔄 重新开始
-                </button>
-                <p class="restart-hint pixel-text">或按 Enter 键重新开始</p>
             </div>
         </div>
     </div>
     
+    <script src="maps.js"></script>
     <script src="player.js"></script>
     <script src="aiPlayer.js"></script>
     <script src="bullet.js"></script>

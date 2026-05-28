@@ -204,7 +204,22 @@ class ObstacleManager {
         this.obstacles = [];
     }
 
-    generateObstacles(level) {
+    generateObstacles(level, mapId = null) {
+        if (mapId && MAPS[mapId - 1]) {
+            this.generateFromMap(MAPS[mapId - 1]);
+        } else {
+            this.generateRandom(level);
+        }
+    }
+
+    generateFromMap(mapData) {
+        this.obstacles = [];
+        mapData.obstacles.forEach(obs => {
+            this.obstacles.push(new Obstacle(obs.x, obs.y, obs.w, obs.h));
+        });
+    }
+
+    generateRandom(level) {
         this.obstacles = [];
         
         const mapWidth = 1400;

@@ -454,6 +454,69 @@ body {
     text-shadow: 1px 1px 0 #000;
 }
 
+.end-buttons {
+    display: flex;
+    gap: 20px;
+    margin: 30px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.end-btn {
+    padding: 15px 30px;
+    min-width: 180px;
+    font-size: clamp(14px, 2vw, 20px);
+    transition: all 0.3s ease;
+}
+
+.end-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(233, 69, 96, 0.6);
+}
+
+#playAgainBtn {
+    background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+}
+
+#playAgainBtn:hover {
+    background: linear-gradient(180deg, #4ade80 0%, #22c55e 100%);
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.6);
+}
+
+#changeMapBtn {
+    background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+}
+
+#changeMapBtn:hover {
+    background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.6);
+}
+
+#homeBtnEnd {
+    background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+#homeBtnEnd:hover {
+    background: linear-gradient(180deg, #a78bfa 0%, #8b5cf6 100%);
+    box-shadow: 0 8px 20px rgba(139, 92, 246, 0.6);
+}
+
+.end-hint {
+    font-size: clamp(12px, 1.8vw, 16px);
+    color: #666;
+    margin-top: 15px;
+    text-shadow: 1px 1px 0 #000;
+}
+
+body.day-mode .end-btn {
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+}
+
+body.day-mode .end-hint {
+    color: #666;
+}
+
 /* 响应式布局 */
 @media (max-width: 800px) {
     .controls-grid {
@@ -952,4 +1015,146 @@ body.day-mode .pixel-btn.tab.active {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.map-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    width: 100%;
+    max-width: 1400px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.map-card {
+    background: rgba(26, 26, 46, 0.9);
+    border: 3px solid #0f3460;
+    border-radius: 10px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.map-card:hover {
+    border-color: #00ff88;
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 255, 136, 0.3);
+}
+
+.map-card.selected {
+    border-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.map-preview {
+    width: 100%;
+    height: 180px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #1a1a2e;
+    border: 2px solid #0f3460;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.map-preview canvas {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    border-radius: 6px;
+}
+
+.map-info {
+    text-align: center;
+    width: 100%;
+}
+
+.map-name {
+    font-size: clamp(16px, 2.5vw, 22px);
+    color: #00ff88;
+    margin: 10px 0 5px;
+    text-shadow: 2px 2px 0 #000;
+}
+
+.map-name-en {
+    font-size: clamp(10px, 1.5vw, 14px);
+    color: #888;
+    margin: 5px 0 10px;
+    font-style: italic;
+}
+
+.map-description {
+    font-size: clamp(11px, 1.8vw, 13px);
+    color: #aaa;
+    margin: 10px 0;
+    line-height: 1.4;
+}
+
+.map-difficulty {
+    font-size: clamp(14px, 2vw, 18px);
+    color: #ffd700;
+    margin-top: 10px;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.subtitle {
+    font-size: clamp(16px, 2.5vw, 24px);
+    color: #aaa;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 0 #000;
+}
+
+body.day-mode .map-card {
+    background: rgba(240, 248, 255, 0.95);
+    border-color: #4a9eff;
+}
+
+body.day-mode .map-name {
+    color: #2a6aaa;
+    text-shadow: none;
+}
+
+body.day-mode .map-description {
+    color: #4a4a4a;
+}
+
+body.day-mode .subtitle {
+    color: #2d5a8a;
+}
+
+body.day-mode .map-preview {
+    background: #e6f2ff;
+    border-color: #4a9eff;
+}
+
+body.day-mode .map-card:hover .map-preview {
+    border-color: #00ff88;
+}
+
+.map-grid::-webkit-scrollbar {
+    width: 12px;
+}
+
+.map-grid::-webkit-scrollbar-track {
+    background: rgba(15, 52, 96, 0.3);
+    border-radius: 6px;
+}
+
+.map-grid::-webkit-scrollbar-thumb {
+    background: #0f3460;
+    border-radius: 6px;
+    border: 2px solid #1a1a2e;
+}
+
+.map-grid::-webkit-scrollbar-thumb:hover {
+    background: #00ff88;
 }

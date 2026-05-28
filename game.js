@@ -10,20 +10,18 @@ class Game {
         this.obstacleManager = new ObstacleManager();
         this.healthLimit = 200;
         
-        // 模式和难度设置
-        this.gameMode = 'two'; // 'single' 或 'two'
-        this.difficulty = 2; // 1=简单, 2=普通, 3=困难
+        this.gameMode = 'two';
+        this.difficulty = 2;
+        this.selectedMapId = 1;
         
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
         
-        // 默认颜色配置
         this.defaultPlayer1Color = '#e94560';
         this.defaultPlayer2Color = '#4a9eff';
         this.player1Color = this.defaultPlayer1Color;
         this.player2Color = this.defaultPlayer2Color;
         
-        // 初始化玩家（临时，实际游戏开始时重新创建）
         this.players = [
             new Player(100, 400, this.createColorConfig(this.player1Color, 'red'), {
                 up: 'KeyW',
@@ -157,7 +155,6 @@ class Game {
             }
             
             if ((this.gameState === 'gameover' || this.gameState === 'countdown') && e.code === 'Enter') {
-                this.startGame();
             }
             
             if (this.gameState === 'countdown' || this.gameState === 'paused') {
@@ -203,7 +200,6 @@ class Game {
     }
 
     setupUI() {
-        // 模式选择按钮
         document.getElementById('singlePlayerBtn').addEventListener('click', () => {
             this.gameMode = 'single';
             this.showScreen('difficultyScreen');
@@ -211,32 +207,42 @@ class Game {
         
         document.getElementById('twoPlayerBtn').addEventListener('click', () => {
             this.gameMode = 'two';
-            this.startGame();
+            this.showScreen('mapSelectionScreen');
         });
         
-        // 难度选择按钮
         document.getElementById('easyBtn').addEventListener('click', () => {
             this.difficulty = 1;
-            this.startGame();
+            this.showScreen('mapSelectionScreen');
         });
         
         document.getElementById('normalBtn').addEventListener('click', () => {
             this.difficulty = 2;
-            this.startGame();
+            this.showScreen('mapSelectionScreen');
         });
         
         document.getElementById('hardBtn').addEventListener('click', () => {
             this.difficulty = 3;
-            this.startGame();
+            this.showScreen('mapSelectionScreen');
         });
         
         document.getElementById('backToStartBtn').addEventListener('click', () => {
             this.showScreen('startScreen');
         });
         
-        document.getElementById('restartBtn').addEventListener('click', () => {
+        document.getElementById('backFromMapBtn').addEventListener('click', () => {
+            if (this.gameMode === 'single') {
+                this.showScreen('difficultyScreen');
+            } else {
+                this.showScreen('startScreen');
+            }
+        });
+        
+        document.getElementById('randomMapBtn').addEventListener('click', () => {
+            this.selectedMapId = 0;
             this.startGame();
         });
+        
+        this.setupMapSelection();
         
         document.getElementById('resumeBtn').addEventListener('click', () => {
             this.resumeGame();
@@ -250,7 +256,6 @@ class Game {
             this.goToHome();
         });
         
-        // 游戏设置弹窗
         const settingsModal = document.getElementById('settingsModal');
         const settingsBtn = document.getElementById('settingsBtn');
         const closeModalBtn = document.getElementById('closeModalBtn');
@@ -259,7 +264,6 @@ class Game {
         const controlsPanel = document.getElementById('controlsPanel');
         const gameplayPanel = document.getElementById('gameplayPanel');
         
-        // 打开/关闭弹窗
         settingsBtn.addEventListener('click', () => {
             settingsModal.classList.remove('hidden');
         });
@@ -268,14 +272,12 @@ class Game {
             settingsModal.classList.add('hidden');
         });
         
-        // 点击弹窗外部关闭
         settingsModal.addEventListener('click', (e) => {
             if (e.target === settingsModal) {
                 settingsModal.classList.add('hidden');
             }
         });
         
-        // 标签页切换
         const switchTab = (tab) => {
             if (tab === 'controls') {
                 controlsTab.classList.add('active');
@@ -293,7 +295,6 @@ class Game {
         controlsTab.addEventListener('click', () => switchTab('controls'));
         gameplayTab.addEventListener('click', () => switchTab('gameplay'));
         
-        // 血量上限设置
         const healthLimitInput = document.getElementById('healthLimit');
         const healthLimitValue = document.getElementById('healthLimitValue');
         
@@ -302,7 +303,6 @@ class Game {
             healthLimitValue.textContent = this.healthLimit;
         });
         
-        // 白天/黑夜模式切换
         const dayThemeBtn = document.getElementById('dayThemeBtn');
         const nightThemeBtn = document.getElementById('nightThemeBtn');
         
@@ -323,7 +323,6 @@ class Game {
         dayThemeBtn.addEventListener('click', () => switchTheme('day'));
         nightThemeBtn.addEventListener('click', () => switchTheme('night'));
         
-        // 玩家颜色选择
         const player1ColorInput = document.getElementById('player1Color');
         const player1Preview = document.getElementById('player1Preview');
         const player2ColorInput = document.getElementById('player2Color');
@@ -351,7 +350,6 @@ class Game {
             updatePlayer2Color(e.target.value);
         });
         
-        // 从本地存储恢复主题和颜色
         const savedTheme = localStorage.getItem('gameTheme');
         if (savedTheme === 'day') {
             switchTheme('day');
@@ -367,6 +365,196 @@ class Game {
         if (savedPlayer2Color) {
             player2ColorInput.value = savedPlayer2Color;
             updatePlayer2Color(savedPlayer2Color);
+        }
+    }
+    
+    setupMapSelection() {
+        const mapGrid = document.getElementById('mapGrid');
+        if (!mapGrid) return;
+        
+        mapGrid.innerHTML = '';
+        
+        MAPS.forEach((map, index) => {
+            const mapCard = document.createElement('div');
+            mapCard.className = 'map-card';
+            mapCard.dataset.mapId = map.id;
+            
+            const previewContainer = document.createElement('div');
+            previewContainer.className = 'map-preview';
+            
+            const canvas = document.createElement('canvas');
+            canvas.id = `mapPreview${map.id}`;
+            previewContainer.appendChild(canvas);
+            
+            const mapInfo = document.createElement('div');
+            mapInfo.className = 'map-info';
+            mapInfo.innerHTML = `
+                <h3 class="map-name">${map.name}</h3>
+                <p class="map-name-en">${map.nameEn}</p>
+                <p class="map-description">${map.description}</p>
+                <div class="map-difficulty">
+                    ${'⭐'.repeat(map.difficulty)}
+                </div>
+            `;
+            
+            mapCard.appendChild(previewContainer);
+            mapCard.appendChild(mapInfo);
+            
+            mapCard.addEventListener('click', () => {
+                document.querySelectorAll('.map-card').forEach(c => c.classList.remove('selected'));
+                mapCard.classList.add('selected');
+                this.selectedMapId = map.id;
+                setTimeout(() => {
+                    this.startGame(map.id);
+                }, 300);
+            });
+            
+            mapGrid.appendChild(mapCard);
+        });
+        
+        setTimeout(() => {
+            MAPS.forEach(map => {
+                this.renderMapPreview(map.id);
+            });
+        }, 100);
+    }
+    
+    renderMapPreview(mapId) {
+        const canvas = document.getElementById(`mapPreview${mapId}`);
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        const map = MAPS[mapId - 1];
+        const isDayMode = document.body.classList.contains('day-mode');
+        
+        canvas.width = 280;
+        canvas.height = 180;
+        
+        const padding = 10;
+        const mapWidth = canvas.width - padding * 2;
+        const mapHeight = canvas.height - padding * 2;
+        
+        ctx.fillStyle = isDayMode ? '#e6f2ff' : '#1a1a2e';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        const gridColor = isDayMode ? 'rgba(74, 158, 255, 0.2)' : 'rgba(74, 158, 255, 0.3)';
+        ctx.strokeStyle = gridColor;
+        ctx.lineWidth = 1;
+        const gridSize = 14;
+        for (let x = padding; x < canvas.width - padding; x += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, padding);
+            ctx.lineTo(x, canvas.height - padding);
+            ctx.stroke();
+        }
+        for (let y = padding; y < canvas.height - padding; y += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(padding, y);
+            ctx.lineTo(canvas.width - padding, y);
+            ctx.stroke();
+        }
+        
+        const mapBgColor = isDayMode ? '#f0f8ff' : '#2d2d4a';
+        const mapBorderColor = isDayMode ? '#4a9eff' : '#4a4a6a';
+        ctx.fillStyle = mapBgColor;
+        ctx.fillRect(padding, padding, mapWidth, mapHeight);
+        
+        ctx.strokeStyle = mapBorderColor;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(padding, padding, mapWidth, mapHeight);
+        
+        if (map) {
+            const scaleX = mapWidth / 1400;
+            const scaleY = mapHeight / 900;
+            
+            map.obstacles.forEach((obs, index) => {
+                const x = padding + obs.x * scaleX;
+                const y = padding + obs.y * scaleY;
+                const w = obs.w * scaleX;
+                const h = obs.h * scaleY;
+                
+                const obsLightColor = isDayMode ? '#8ab4f8' : '#5a5a7a';
+                const obsDarkColor = isDayMode ? '#5a8fd8' : '#4a4a6a';
+                
+                const gradient = ctx.createLinearGradient(x, y, x + w, y + h);
+                gradient.addColorStop(0, obsLightColor);
+                gradient.addColorStop(1, obsDarkColor);
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, y, w, h);
+                
+                ctx.strokeStyle = isDayMode ? '#6a9ad8' : '#7a7a9a';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(x, y, w, h);
+                
+                ctx.fillStyle = isDayMode ? 'rgba(140, 180, 248, 0.6)' : 'rgba(90, 90, 120, 0.5)';
+                ctx.fillRect(x + 2, y + 2, w - 4, 3);
+                ctx.fillRect(x + 2, y + 2, 3, h - 4);
+                
+                ctx.fillStyle = isDayMode ? 'rgba(90, 140, 200, 0.5)' : 'rgba(50, 50, 70, 0.5)';
+                ctx.fillRect(x + w - 5, y + 5, 3, h - 7);
+                ctx.fillRect(x + 5, y + h - 5, w - 7, 3);
+            });
+        }
+        
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
+        
+        const player1Glow = isDayMode ? '#cc3333' : '#e94560';
+        const player1Color = isDayMode ? '#ff6b6b' : '#e94560';
+        const player1Highlight = isDayMode ? '#ff9999' : '#ff6b8a';
+        
+        ctx.fillStyle = player1Color;
+        ctx.shadowBlur = isDayMode ? 4 : 8;
+        ctx.shadowColor = player1Glow;
+        ctx.beginPath();
+        ctx.arc(padding + 15, padding + mapHeight / 2, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = player1Highlight;
+        ctx.beginPath();
+        ctx.arc(padding + 13, padding + mapHeight / 2 - 2, 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        const player2Glow = isDayMode ? '#2266aa' : '#4a9eff';
+        const player2Color = isDayMode ? '#5090f0' : '#4a9eff';
+        const player2Highlight = isDayMode ? '#80c0ff' : '#7ac4ff';
+        
+        ctx.fillStyle = player2Color;
+        ctx.shadowBlur = isDayMode ? 4 : 8;
+        ctx.shadowColor = player2Glow;
+        ctx.beginPath();
+        ctx.arc(canvas.width - padding - 15, padding + mapHeight / 2, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = player2Highlight;
+        ctx.beginPath();
+        ctx.arc(canvas.width - padding - 17, padding + mapHeight / 2 - 2, 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
+        
+        ctx.strokeStyle = isDayMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(padding + 15, padding + mapHeight / 2);
+        ctx.lineTo(canvas.width / 2, padding + mapHeight / 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2, padding + mapHeight / 2);
+        ctx.lineTo(canvas.width - padding - 15, padding + mapHeight / 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        if (map && map.description) {
+            ctx.fillStyle = isDayMode ? 'rgba(200, 220, 255, 0.8)' : 'rgba(0, 0, 0, 0.6)';
+            ctx.fillRect(5, canvas.height - 20, canvas.width - 10, 15);
+            
+            const textColor = isDayMode ? '#2d5a8a' : '#aaa';
+            ctx.fillStyle = textColor;
+            ctx.font = '8px Courier New';
+            ctx.textAlign = 'center';
+            ctx.fillText(`难度: ${'⭐'.repeat(map.difficulty)}`, canvas.width / 2, canvas.height - 9);
         }
     }
 
@@ -392,10 +580,13 @@ class Game {
         this.showScreen('startScreen');
     }
 
-    startGame() {
+    startGame(mapId = null) {
+        if (mapId !== null) {
+            this.selectedMapId = mapId;
+        }
+        
         this.level = 1;
         
-        // 创建玩家1（人类玩家）
         this.players[0] = new Player(100, 400, this.createColorConfig(this.player1Color, 'red'), {
             up: 'KeyW',
             down: 'KeyS',
@@ -409,9 +600,7 @@ class Game {
             skill3: 'KeyO'
         }, 1, this.healthLimit);
         
-        // 根据模式创建玩家2
         if (this.gameMode === 'single') {
-            // AI玩家
             this.players[1] = new AIPlayer(1250, 400, this.createColorConfig(this.player2Color, 'blue'), {
                 up: 'ArrowUp',
                 down: 'ArrowDown',
@@ -424,10 +613,8 @@ class Game {
                 skill2: 'Numpad5',
                 skill3: 'Numpad6'
             }, 2, this.healthLimit, this.difficulty);
-            // 设置AI目标
             this.players[1].setTarget(this.players[0]);
         } else {
-            // 双人模式：人类玩家
             this.players[1] = new Player(1250, 400, this.createColorConfig(this.player2Color, 'blue'), {
                 up: 'ArrowUp',
                 down: 'ArrowDown',
@@ -444,7 +631,13 @@ class Game {
         
         this.bullets = [];
         this.explosions = [];
-        this.obstacleManager.generateObstacles(this.level);
+        
+        if (this.selectedMapId === 0) {
+            this.obstacleManager.generateObstacles(this.level);
+        } else {
+            this.obstacleManager.generateObstacles(this.level, this.selectedMapId);
+        }
+        
         this.showScreen('gameScreen');
         this.updateUI();
         this.startCountdown();
@@ -740,8 +933,45 @@ class Game {
         
         setTimeout(() => {
             this.gameState = 'gameover';
-            this.showScreen('endScreen');
+            this.showEndScreen(winner);
         }, 3000);
+    }
+    
+    showEndScreen(winner) {
+        const endScreen = document.getElementById('endScreen');
+        const victoryContainer = endScreen.querySelector('.victory-container');
+        
+        victoryContainer.innerHTML = `
+            <h1 id="winnerText" class="title pixel-text" style="color: ${winner === 1 ? this.player1Color : this.player2Color};">
+                ${winner === 1 ? '🎉 红方获胜！🎉' : '🎉 蓝方获胜！🎉'}
+            </h1>
+            <div class="victory-decoration">
+                <div class="star">★</div>
+                <div class="star">★</div>
+                <div class="star">★</div>
+            </div>
+            <p class="victory-subtitle pixel-text">恭喜获胜方！</p>
+            <div class="end-buttons">
+                <button id="playAgainBtn" class="pixel-btn end-btn">🔄 再来一局</button>
+                <button id="changeMapBtn" class="pixel-btn end-btn">🗺️ 换个地图</button>
+                <button id="homeBtnEnd" class="pixel-btn end-btn">🏠 返回主页</button>
+            </div>
+            <p class="end-hint pixel-text">选择上方选项继续游戏</p>
+        `;
+        
+        this.showScreen('endScreen');
+        
+        victoryContainer.querySelector('#playAgainBtn').addEventListener('click', () => {
+            this.startGame();
+        });
+        
+        victoryContainer.querySelector('#changeMapBtn').addEventListener('click', () => {
+            this.showScreen('mapSelectionScreen');
+        });
+        
+        victoryContainer.querySelector('#homeBtnEnd').addEventListener('click', () => {
+            this.goToHome();
+        });
     }
 
     nextLevel() {
