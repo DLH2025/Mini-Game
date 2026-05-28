@@ -153,6 +153,8 @@ class Player {
         this.attackType = 'melee';
         this.meleeCooldown = 30;
         this.isMeleeAttacking = true;
+        this.meleeHitObstacle = false; // 标记是否已经击中过掩体
+        this.meleeHitPlayer = false; // 标记是否已经击打过玩家
         setTimeout(() => { this.isMeleeAttacking = false; }, 200);
 
         const attackSize = 40;
@@ -189,16 +191,76 @@ class Player {
         return true;
     }
 
-    skill2() {
+    skill2(obstacles = []) {
         if (this.skill2Cooldown > 0 || this.isDashing) return false;
         this.isDashing = true;
         this.dashTimer = 10;
         this.skill2Cooldown = this.skill2MaxCooldown;
-        const dashDistance = 150;
-        this.x += this.direction.x * dashDistance;
-        this.y += this.direction.y * dashDistance;
+        
+        const maxDashDistance = 300;
+        let dashDistance = maxDashDistance;
+        
+        const startX = this.x + this.width / 2;
+        const startY = this.y + this.height / 2;
+        
+        const dirX = this.direction.x;
+        const dirY = this.direction.y;
+        
+        const dashEndX = startX + dirX * maxDashDistance;
+        const dashEndY = startY + dirY * maxDashDistance;
+        
+        let closestObstacleDist = maxDashDistance;
+        
+        obstacles.forEach(obs => {
+            if (obs.destroyed) return;
+            
+            const closestX = Math.max(obs.x, Math.min(startX, obs.x + obs.width));
+            const closestY = Math.max(obs.y, Math.min(startY, obs.y + obs.height));
+            
+            const dx = startX - closestX;
+            const dy = startY - closestY;
+            const distFromStart = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distFromStart > 0) {
+                const t = ((startX - closestX) * dirX + (startY - closestY) * dirY) / (distFromStart * distFromStart);
+                
+                let nearX, nearY;
+                if (t < 0) {
+                    nearX = startX;
+                    nearY = startY;
+                } else if (t > 1) {
+                    nearX = startX + dirX * distFromStart;
+                    nearY = startY + dirY * distFromStart;
+                } else {
+                    nearX = startX - dirX * t * distFromStart;
+                    nearY = startY - dirY * t * distFromStart;
+                }
+                
+                if (nearX >= obs.x && nearX <= obs.x + obs.width &&
+                    nearY >= obs.y && nearY <= obs.y + obs.height) {
+                    
+                    const distToObstacle = Math.sqrt(Math.pow(nearX - startX, 2) + Math.pow(nearY - startY, 2));
+                    
+                    if (distToObstacle < closestObstacleDist) {
+                        closestObstacleDist = distToObstacle;
+                    }
+                }
+            }
+        });
+        
+        if (closestObstacleDist < maxDashDistance - 10) {
+            dashDistance = closestObstacleDist - this.width / 2 - 10;
+            if (dashDistance < 50) {
+                dashDistance = 50;
+            }
+        }
+        
+        this.x += dirX * dashDistance;
+        this.y += dirY * dashDistance;
+        
         this.x = Math.max(0, Math.min(1400 - this.width, this.x));
         this.y = Math.max(0, Math.min(900 - this.height, this.y));
+        
         return true;
     }
 

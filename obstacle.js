@@ -4,7 +4,7 @@ class Obstacle {
         this.y = y;
         this.width = width;
         this.height = height;
-        this.maxHealth = 100;
+        this.maxHealth = 250;
         this.health = this.maxHealth;
         this.damageFlash = 0;
         this.destroyed = false;
@@ -360,7 +360,8 @@ class ObstacleManager {
     damageFromBullet(bullet) {
         for (const obs of this.obstacles) {
             if (!obs.destroyed && bullet.checkCollision(obs)) {
-                const destroyed = obs.takeDamage(30);
+                const damage = Math.ceil(obs.maxHealth * 0.1);
+                const destroyed = obs.takeDamage(damage);
                 return {
                     hit: true,
                     destroyed: destroyed,
@@ -389,7 +390,8 @@ class ObstacleManager {
                 );
                 
                 if (dist < attackRange + Math.max(obs.width, obs.height) / 2) {
-                    const destroyed = obs.takeDamage(50);
+                    const damage = Math.ceil(obs.maxHealth * 0.2);
+                    const destroyed = obs.takeDamage(damage);
                     return {
                         hit: true,
                         destroyed: destroyed,

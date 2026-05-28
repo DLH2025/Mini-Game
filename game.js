@@ -111,7 +111,7 @@ class Game {
                     }
                 }
                 if (e.code === this.players[0].controls.skill2) {
-                    if (this.players[0].skill2()) {
+                    if (this.players[0].skill2(this.obstacleManager.obstacles)) {
                         this.createDashEffect(this.players[0]);
                     }
                 }
@@ -140,7 +140,7 @@ class Game {
                         }
                     }
                     if (e.code === this.players[1].controls.skill2) {
-                        if (this.players[1].skill2()) {
+                        if (this.players[1].skill2(this.obstacleManager.obstacles)) {
                             this.createDashEffect(this.players[1]);
                         }
                     }
@@ -717,26 +717,34 @@ class Game {
             this.processAIAttacks();
         }
         
-        if (this.players[0].checkMeleeHit(this.players[1])) {
-            this.players[1].takeDamage(this.players[0].meleeDamage);
-            this.createExplosion(this.players[1].x + this.players[1].width/2, this.players[1].y + this.players[1].height/2, this.players[0].colorConfig.medium);
+        if (this.players[0].isMeleeAttacking && !this.players[0].meleeHitPlayer) {
+            if (this.players[0].checkMeleeHit(this.players[1])) {
+                this.players[1].takeDamage(this.players[0].meleeDamage);
+                this.players[0].meleeHitPlayer = true;
+                this.createExplosion(this.players[1].x + this.players[1].width/2, this.players[1].y + this.players[1].height/2, this.players[0].colorConfig.medium);
+            }
         }
         
-        if (this.players[1].checkMeleeHit(this.players[0])) {
-            this.players[0].takeDamage(this.players[1].meleeDamage);
-            this.createExplosion(this.players[0].x + this.players[0].width/2, this.players[0].y + this.players[0].height/2, this.players[1].colorConfig.medium);
+        if (this.players[1].isMeleeAttacking && !this.players[1].meleeHitPlayer) {
+            if (this.players[1].checkMeleeHit(this.players[0])) {
+                this.players[0].takeDamage(this.players[1].meleeDamage);
+                this.players[1].meleeHitPlayer = true;
+                this.createExplosion(this.players[0].x + this.players[0].width/2, this.players[0].y + this.players[0].height/2, this.players[1].colorConfig.medium);
+            }
         }
         
-        if (this.players[0].isMeleeAttacking) {
+        if (this.players[0].isMeleeAttacking && !this.players[0].meleeHitObstacle) {
             const meleeResult1 = this.obstacleManager.damageFromMelee(this.players[0]);
             if (meleeResult1.hit) {
+                this.players[0].meleeHitObstacle = true;
                 this.createExplosion(meleeResult1.x, meleeResult1.y, '#888888');
             }
         }
         
-        if (this.players[1].isMeleeAttacking) {
+        if (this.players[1].isMeleeAttacking && !this.players[1].meleeHitObstacle) {
             const meleeResult2 = this.obstacleManager.damageFromMelee(this.players[1]);
             if (meleeResult2.hit) {
+                this.players[1].meleeHitObstacle = true;
                 this.createExplosion(meleeResult2.x, meleeResult2.y, '#888888');
             }
         }
@@ -812,7 +820,7 @@ class Game {
                 break;
             case 'dash':
                 if (ai.skill2Cooldown <= 0) {
-                    if (ai.skill2()) {
+                    if (ai.skill2(this.obstacleManager.obstacles)) {
                         this.createDashEffect(ai);
                     }
                 }
@@ -888,7 +896,8 @@ class Game {
             );
             
             if (obsDist < blast.radius) {
-                obs.takeDamage(blast.damage);
+                const damage = Math.ceil(obs.maxHealth * 0.5);
+                obs.takeDamage(damage);
             }
         }
     }
@@ -914,35 +923,11 @@ class Game {
     }
 
     showVictoryAnimation(winner) {
-        const winnerText = document.getElementById('winnerText');
-        winnerText.textContent = winner === 1 ? '🎉 红方获胜！🎉' : '🎉 蓝方获胜！🎉';
-        winnerText.style.color = winner === 1 ? this.player1Color : this.player2Color;
-        
-        this.showScreen('gameScreen');
-        
-        this.gameState = 'victory';
-        
-        const victoryLoop = () => {
-            if (this.gameState !== 'victory') return;
-            
-            this.players.forEach(p => p.crownBounce += 0.15);
-            this.render();
-            
-            requestAnimationFrame(victoryLoop);
-        };
-        
-        setTimeout(() => {
-            this.gameState = 'gameover';
-            this.showEndScreen(winner);
-        }, 3000);
-    }
-    
-    showEndScreen(winner) {
         const endScreen = document.getElementById('endScreen');
         const victoryContainer = endScreen.querySelector('.victory-container');
         
         victoryContainer.innerHTML = `
-            <h1 id="winnerText" class="title pixel-text" style="color: ${winner === 1 ? this.player1Color : this.player2Color};">
+            <h1 class="title pixel-text" style="color: ${winner === 1 ? this.player1Color : this.player2Color};">
                 ${winner === 1 ? '🎉 红方获胜！🎉' : '🎉 蓝方获胜！🎉'}
             </h1>
             <div class="victory-decoration">
@@ -959,19 +944,48 @@ class Game {
             <p class="end-hint pixel-text">选择上方选项继续游戏</p>
         `;
         
-        this.showScreen('endScreen');
+        this.showScreen('gameScreen');
         
-        victoryContainer.querySelector('#playAgainBtn').addEventListener('click', () => {
-            this.startGame();
-        });
+        this.gameState = 'victory';
         
-        victoryContainer.querySelector('#changeMapBtn').addEventListener('click', () => {
-            this.showScreen('mapSelectionScreen');
-        });
+        const victoryLoop = () => {
+            if (this.gameState !== 'victory') return;
+            
+            this.players.forEach(p => p.crownBounce += 0.15);
+            this.render();
+            
+            requestAnimationFrame(victoryLoop);
+        };
         
-        victoryContainer.querySelector('#homeBtnEnd').addEventListener('click', () => {
-            this.goToHome();
-        });
+        setTimeout(() => {
+            this.gameState = 'gameover';
+            this.showScreen('endScreen');
+            this.setupEndScreenButtons();
+        }, 3000);
+    }
+    
+    setupEndScreenButtons() {
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const changeMapBtn = document.getElementById('changeMapBtn');
+        const homeBtnEnd = document.getElementById('homeBtnEnd');
+        
+        if (playAgainBtn) {
+            playAgainBtn.addEventListener('click', () => {
+                this.startGame();
+            });
+        }
+        
+        if (changeMapBtn) {
+            changeMapBtn.addEventListener('click', () => {
+                this.showScreen('mapSelectionScreen');
+            });
+        }
+        
+        if (homeBtnEnd) {
+            homeBtnEnd.addEventListener('click', () => {
+                this.goToHome();
+            });
+        }
     }
 
     nextLevel() {
