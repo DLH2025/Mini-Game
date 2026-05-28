@@ -116,6 +116,27 @@
                             </div>
                         </div>
                     </div>
+                    <div class="system-controls" style="margin-top: 20px;">
+                        <p class="system-hint">🔊 音效设置</p>
+                        <div class="sound-settings">
+                            <div class="sound-toggle">
+                                <label class="pixel-text">音效开关</label>
+                                <button id="soundToggleBtn" class="pixel-btn sound-btn active">🔊 开启</button>
+                            </div>
+                            <div class="volume-control">
+                                <label for="masterVolume" class="pixel-text">主音量: <span id="masterVolumeValue">50</span>%</label>
+                                <input type="range" id="masterVolume" min="0" max="100" value="50" step="5">
+                            </div>
+                            <div class="volume-control">
+                                <label for="sfxVolume" class="pixel-text">音效: <span id="sfxVolumeValue">70</span>%</label>
+                                <input type="range" id="sfxVolume" min="0" max="100" value="70" step="5">
+                            </div>
+                            <div class="volume-control">
+                                <label for="musicVolume" class="pixel-text">音乐: <span id="musicVolumeValue">30</span>%</label>
+                                <input type="range" id="musicVolume" min="0" max="100" value="30" step="5">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -204,6 +225,7 @@
     </div>
     
     <script src="maps.js"></script>
+    <script src="sound.js"></script>
     <script src="player.js"></script>
     <script src="aiPlayer.js"></script>
     <script src="bullet.js"></script>

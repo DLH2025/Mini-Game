@@ -103,16 +103,19 @@ class Game {
                     const attack = this.players[0].rangedAttack();
                     if (attack) {
                         this.bullets.push(new Bullet(attack.x, attack.y, attack.direction, attack.damage, attack.owner, this.players[0].colorConfig));
+                        soundManager.playShoot();
                     }
                 }
                 if (e.code === this.players[0].controls.skill1) {
                     if (this.players[0].skill1()) {
                         this.createHealingEffect(this.players[0]);
+                        soundManager.playSkill1();
                     }
                 }
                 if (e.code === this.players[0].controls.skill2) {
                     if (this.players[0].skill2(this.obstacleManager.obstacles)) {
                         this.createDashEffect(this.players[0]);
+                        soundManager.playSkill2();
                     }
                 }
                 if (e.code === this.players[0].controls.skill3) {
@@ -120,6 +123,7 @@ class Game {
                     if (blast) {
                         this.createBlastEffect(this.players[0]);
                         this.processBlast(blast, this.players[1], this.players[0]);
+                        soundManager.playSkill3();
                     }
                 }
                 
@@ -127,21 +131,25 @@ class Game {
                 if (this.gameMode === 'two') {
                     if (e.code === this.players[1].controls.melee) {
                         const attack = this.players[1].meleeAttack();
+                        if (attack) soundManager.playMelee();
                     }
                     if (e.code === this.players[1].controls.ranged) {
                         const attack = this.players[1].rangedAttack();
                         if (attack) {
                             this.bullets.push(new Bullet(attack.x, attack.y, attack.direction, attack.damage, attack.owner, this.players[1].colorConfig));
+                            soundManager.playShoot();
                         }
                     }
                     if (e.code === this.players[1].controls.skill1) {
                         if (this.players[1].skill1()) {
                             this.createHealingEffect(this.players[1]);
+                            soundManager.playSkill1();
                         }
                     }
                     if (e.code === this.players[1].controls.skill2) {
                         if (this.players[1].skill2(this.obstacleManager.obstacles)) {
                             this.createDashEffect(this.players[1]);
+                            soundManager.playSkill2();
                         }
                     }
                     if (e.code === this.players[1].controls.skill3) {
@@ -149,6 +157,7 @@ class Game {
                         if (blast) {
                             this.createBlastEffect(this.players[1]);
                             this.processBlast(blast, this.players[0], this.players[1]);
+                            soundManager.playSkill3();
                         }
                     }
                 }
@@ -366,6 +375,63 @@ class Game {
             player2ColorInput.value = savedPlayer2Color;
             updatePlayer2Color(savedPlayer2Color);
         }
+        
+        // 音效设置
+        this.setupSoundSettings();
+    }
+    
+    setupSoundSettings() {
+        const soundToggleBtn = document.getElementById('soundToggleBtn');
+        const masterVolumeInput = document.getElementById('masterVolume');
+        const masterVolumeValue = document.getElementById('masterVolumeValue');
+        const sfxVolumeInput = document.getElementById('sfxVolume');
+        const sfxVolumeValue = document.getElementById('sfxVolumeValue');
+        const musicVolumeInput = document.getElementById('musicVolume');
+        const musicVolumeValue = document.getElementById('musicVolumeValue');
+        
+        if (!soundToggleBtn) return;
+        
+        const updateSoundToggle = () => {
+            if (soundManager.enabled) {
+                soundToggleBtn.textContent = '🔊 开启';
+                soundToggleBtn.classList.add('active');
+            } else {
+                soundToggleBtn.textContent = '🔇 关闭';
+                soundToggleBtn.classList.remove('active');
+            }
+        };
+        
+        soundToggleBtn.addEventListener('click', () => {
+            soundManager.setEnabled(!soundManager.enabled);
+            updateSoundToggle();
+        });
+        
+        masterVolumeInput.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            masterVolumeValue.textContent = value;
+            soundManager.setMasterVolume(value / 100);
+        });
+        
+        sfxVolumeInput.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            sfxVolumeValue.textContent = value;
+            soundManager.setSfxVolume(value / 100);
+        });
+        
+        musicVolumeInput.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            musicVolumeValue.textContent = value;
+            soundManager.setMusicVolume(value / 100);
+        });
+        
+        // 加载保存的音效设置
+        masterVolumeInput.value = Math.round(soundManager.masterVolume * 100);
+        masterVolumeValue.textContent = Math.round(soundManager.masterVolume * 100);
+        sfxVolumeInput.value = Math.round(soundManager.sfxVolume * 100);
+        sfxVolumeValue.textContent = Math.round(soundManager.sfxVolume * 100);
+        musicVolumeInput.value = Math.round(soundManager.musicVolume * 100);
+        musicVolumeValue.textContent = Math.round(soundManager.musicVolume * 100);
+        updateSoundToggle();
     }
     
     setupMapSelection() {
@@ -651,9 +717,12 @@ class Game {
         countdownOverlay.classList.remove('hidden');
         this.gameState = 'countdown';
         
+        soundManager.playMusic();
+        
         let count = 3;
         countdownNumber.textContent = count;
         countdownText.textContent = '准备开始！';
+        soundManager.playCountdown();
         
         const countdownInterval = setInterval(() => {
             count--;
@@ -663,6 +732,7 @@ class Game {
                 countdownNumber.style.animation = 'none';
                 countdownNumber.offsetHeight;
                 countdownNumber.style.animation = 'countdownPulse 1s ease-in-out infinite';
+                soundManager.playCountdown();
             } else if (count === 0) {
                 countdownNumber.textContent = 'GO!';
                 countdownNumber.style.color = '#ffd700';
@@ -670,6 +740,7 @@ class Game {
                 countdownNumber.offsetHeight;
                 countdownNumber.style.animation = 'countdownPulse 0.3s ease-in-out infinite';
                 countdownText.textContent = '开始战斗！';
+                soundManager.playCountdown();
             } else {
                 clearInterval(countdownInterval);
                 countdownOverlay.classList.add('hidden');
@@ -722,6 +793,7 @@ class Game {
                 this.players[1].takeDamage(this.players[0].meleeDamage);
                 this.players[0].meleeHitPlayer = true;
                 this.createExplosion(this.players[1].x + this.players[1].width/2, this.players[1].y + this.players[1].height/2, this.players[0].colorConfig.medium);
+                soundManager.playHit();
             }
         }
         
@@ -730,6 +802,7 @@ class Game {
                 this.players[0].takeDamage(this.players[1].meleeDamage);
                 this.players[1].meleeHitPlayer = true;
                 this.createExplosion(this.players[0].x + this.players[0].width/2, this.players[0].y + this.players[0].height/2, this.players[1].colorConfig.medium);
+                soundManager.playHit();
             }
         }
         
@@ -738,6 +811,7 @@ class Game {
             if (meleeResult1.hit) {
                 this.players[0].meleeHitObstacle = true;
                 this.createExplosion(meleeResult1.x, meleeResult1.y, '#888888');
+                soundManager.playMelee();
             }
         }
         
@@ -746,6 +820,7 @@ class Game {
             if (meleeResult2.hit) {
                 this.players[1].meleeHitObstacle = true;
                 this.createExplosion(meleeResult2.x, meleeResult2.y, '#888888');
+                soundManager.playMelee();
             }
         }
         
@@ -756,8 +831,10 @@ class Game {
             if (obsResult.hit) {
                 if (obsResult.destroyed) {
                     this.createExplosion(obsResult.x, obsResult.y, '#ffaa00');
+                    soundManager.playObstacleBreak();
                 } else {
                     this.createExplosion(bullet.x, bullet.y, '#888888');
+                    soundManager.playExplosion();
                 }
                 return false;
             }
@@ -765,12 +842,14 @@ class Game {
             if (bullet.owner === 1 && bullet.checkCollision(this.players[1])) {
                 this.players[1].takeDamage(bullet.damage);
                 this.createExplosion(bullet.x, bullet.y, this.players[0].colorConfig.medium);
+                soundManager.playHit();
                 return false;
             }
             
             if (bullet.owner === 2 && bullet.checkCollision(this.players[0])) {
                 this.players[0].takeDamage(bullet.damage);
                 this.createExplosion(bullet.x, bullet.y, this.players[1].colorConfig.medium);
+                soundManager.playHit();
                 return false;
             }
             
@@ -804,6 +883,7 @@ class Game {
             const attack = ai.rangedAttack();
             if (attack) {
                 this.bullets.push(new Bullet(attack.x, attack.y, attack.direction, attack.damage, attack.owner, ai.colorConfig));
+                soundManager.playShoot();
             }
         }
         
@@ -912,12 +992,16 @@ class Game {
     }
 
     endGame(winner) {
+        soundManager.stopMusic();
+        
         if (winner === 1) {
             this.players[0].isWinner = true;
             this.players[1].isDefeated = true;
+            soundManager.playVictory();
         } else {
             this.players[1].isWinner = true;
             this.players[0].isDefeated = true;
+            soundManager.playDefeat();
         }
         
         this.showVictoryAnimation(winner);

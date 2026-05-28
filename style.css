@@ -777,6 +777,94 @@ body.day-mode .skill-cooldown-overlay {
     background: rgba(200, 230, 255, 0.7);
 }
 
+/* 音效设置 */
+.sound-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(15, 52, 96, 0.4);
+    border: 4px solid #4a9eff;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(74, 158, 255, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.sound-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.sound-btn {
+    padding: 8px 20px;
+    min-width: auto;
+    font-size: 16px;
+    background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+}
+
+.sound-btn.active {
+    background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+}
+
+.sound-btn:not(.active) {
+    background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+}
+
+.volume-control {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.volume-control label {
+    font-size: clamp(12px, 2vw, 16px);
+    color: #00ff88;
+}
+
+.volume-control input[type="range"] {
+    width: 100%;
+    height: 10px;
+    -webkit-appearance: none;
+    background: #1a1a2e;
+    border-radius: 5px;
+    outline: none;
+    cursor: pointer;
+}
+
+.volume-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(180deg, #4a9eff 0%, #2d6bb0 100%);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
+}
+
+.volume-control input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(180deg, #4a9eff 0%, #2d6bb0 100%);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
+}
+
+body.day-mode .sound-settings {
+    background: rgba(74, 158, 255, 0.15);
+    border-color: #4a9eff;
+}
+
+body.day-mode .volume-control label {
+    color: #2a6aaa;
+}
+
+body.day-mode .volume-control input[type="range"] {
+    background: #ccc;
+}
+
 /* 颜色自定义 */
 .color-customization {
     display: flex;
