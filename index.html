@@ -13,6 +13,7 @@
             <div class="main-buttons">
                 <button id="singlePlayerBtn" class="pixel-btn">👤 单人模式</button>
                 <button id="twoPlayerBtn" class="pixel-btn">👥 双人模式</button>
+                <button id="coopModeBtn" class="pixel-btn">🎯 闯关模式</button>
                 <button id="settingsBtn" class="pixel-btn">⚙️ 游戏设置</button>
             </div>
         </div>
@@ -25,6 +26,73 @@
                 <button id="normalBtn" class="pixel-btn difficulty-btn">🟡 普通</button>
                 <button id="hardBtn" class="pixel-btn difficulty-btn">🔴 困难</button>
                 <button id="backToStartBtn" class="pixel-btn">↩️ 返回</button>
+            </div>
+        </div>
+        
+        <!-- 闯关模式选择 - 第1步：选择人数 -->
+        <div id="coopPlayerScreen" class="screen hidden">
+            <h1 class="title pixel-text">🎯 闯关模式</h1>
+            <div class="coop-step-indicator">
+                <span class="step active">1</span>
+                <span class="step-line"></span>
+                <span class="step">2</span>
+            </div>
+            <h2 class="step-title pixel-text">选择玩家人数</h2>
+            <div class="coop-selection-panel">
+                <div class="selection-buttons">
+                    <button id="coopSingleBtn" class="pixel-btn player-select-btn" data-players="1">
+                        <span class="btn-icon">👤</span>
+                        <span class="btn-label">单人</span>
+                        <span class="btn-desc">独自挑战所有波次</span>
+                    </button>
+                    <button id="coopDoubleBtn" class="pixel-btn player-select-btn" data-players="2">
+                        <span class="btn-icon">👥</span>
+                        <span class="btn-label">双人</span>
+                        <span class="btn-desc">与好友合作闯关</span>
+                    </button>
+                </div>
+            </div>
+            <div class="coop-actions">
+                <button id="backFromCoopPlayerBtn" class="pixel-btn">↩️ 返回</button>
+            </div>
+        </div>
+
+        <!-- 闯关模式选择 - 第2步：选择难度 -->
+        <div id="coopDifficultyScreen" class="screen hidden">
+            <h1 class="title pixel-text">🎯 闯关模式</h1>
+            <div class="coop-step-indicator">
+                <span class="step done">1</span>
+                <span class="step-line active"></span>
+                <span class="step active">2</span>
+            </div>
+            <h2 class="step-title pixel-text">选择难度</h2>
+            <div class="coop-selection-panel">
+                <div class="selection-buttons">
+                    <button id="coopEasyBtn" class="pixel-btn difficulty-btn" data-difficulty="easy">
+                        <span class="btn-icon">🟢</span>
+                        <span class="btn-label">简单</span>
+                        <span class="btn-desc">5波敌人 · 适合新手</span>
+                    </button>
+                    <button id="coopNormalBtn" class="pixel-btn difficulty-btn" data-difficulty="normal">
+                        <span class="btn-icon">🟡</span>
+                        <span class="btn-label">普通</span>
+                        <span class="btn-desc">10波敌人 · 标准挑战</span>
+                    </button>
+                    <button id="coopEndlessBtn" class="pixel-btn difficulty-btn" data-difficulty="endless">
+                        <span class="btn-icon">♾️</span>
+                        <span class="btn-label">无尽</span>
+                        <span class="btn-desc">无限波次 · 极限生存</span>
+                    </button>
+                </div>
+            </div>
+            <div class="coop-summary">
+                <div class="summary-box">
+                    <span class="pixel-text summary-label">已选:</span>
+                    <span class="pixel-text summary-value" id="coopPlayerSummary">👤 单人</span>
+                </div>
+            </div>
+            <div class="coop-actions">
+                <button id="backFromCoopDiffBtn" class="pixel-btn">↩️ 上一步</button>
             </div>
         </div>
         
@@ -125,23 +193,27 @@
                         <div class="settings-rows">
                             <div class="setting-row">
                                 <div class="setting-label">
-                                    <span class="setting-name">玩家1颜色</span>
+                                    <span class="setting-name">玩家1配色</span>
+                                    <span class="setting-desc">主色 + 辅色</span>
                                 </div>
                                 <div class="setting-control">
-                                    <div class="color-input-wrapper">
-                                        <input type="color" id="player1Color" value="#e94560">
-                                        <span class="color-preview" id="player1Preview" style="background: #e94560;"></span>
+                                    <div class="dual-color-input-wrapper">
+                                        <input type="color" id="player1PrimaryColor" value="#e94560">
+                                        <input type="color" id="player1SecondaryColor" value="#ff6b8a">
+                                        <span class="color-preview dual" id="player1Preview" style="background: linear-gradient(135deg, #e94560 50%, #ff6b8a 50%);"></span>
                                     </div>
                                 </div>
                             </div>
                             <div class="setting-row">
                                 <div class="setting-label">
-                                    <span class="setting-name">玩家2颜色</span>
+                                    <span class="setting-name">玩家2配色</span>
+                                    <span class="setting-desc">主色 + 辅色</span>
                                 </div>
                                 <div class="setting-control">
-                                    <div class="color-input-wrapper">
-                                        <input type="color" id="player2Color" value="#4a9eff">
-                                        <span class="color-preview" id="player2Preview" style="background: #4a9eff;"></span>
+                                    <div class="dual-color-input-wrapper">
+                                        <input type="color" id="player2PrimaryColor" value="#4a9eff">
+                                        <input type="color" id="player2SecondaryColor" value="#00d4ff">
+                                        <span class="color-preview dual" id="player2Preview" style="background: linear-gradient(135deg, #4a9eff 50%, #00d4ff 50%);"></span>
                                     </div>
                                 </div>
                             </div>
@@ -279,18 +351,66 @@
                     <button id="homeBtn" class="pixel-btn pause-btn">🏠 返回主页 (H)</button>
                 </div>
             </div>
+            <!-- 小地图 -->
+            <div id="minimapContainer" class="minimap-container hidden">
+                <canvas id="minimapCanvas" width="180" height="115"></canvas>
+            </div>
         </div>
         
+        <!-- 升级界面 -->
+        <div id="upgradeScreen" class="screen hidden">
+            <h1 class="title pixel-text">⚡ 升级选择</h1>
+            <p class="subtitle pixel-text">第 <span id="upgradeWaveNum">1</span> 波完成！选择一项强化</p>
+            <div class="upgrade-container">
+                <div class="upgrade-options">
+                    <div class="upgrade-card" id="upgradeHealth">
+                        <div class="upgrade-icon">❤️</div>
+                        <div class="upgrade-name">生命强化</div>
+                        <div class="upgrade-desc">最大生命值 +50</div>
+                        <div class="upgrade-value">当前: <span id="currentHealth">200</span></div>
+                    </div>
+                    <div class="upgrade-card" id="upgradeAttack">
+                        <div class="upgrade-icon">⚔️</div>
+                        <div class="upgrade-name">攻击强化</div>
+                        <div class="upgrade-desc">攻击力 +20%</div>
+                        <div class="upgrade-value">当前: <span id="currentAttack">100%</span></div>
+                    </div>
+                    <div class="upgrade-card" id="upgradeSpeed">
+                        <div class="upgrade-icon">💨</div>
+                        <div class="upgrade-name">速度强化</div>
+                        <div class="upgrade-desc">移动速度 +10%</div>
+                        <div class="upgrade-value">当前: <span id="currentSpeed">100%</span></div>
+                    </div>
+                </div>
+                <div class="upgrade-timer">
+                    <span class="pixel-text">选择倒计时: <span id="upgradeTimer">10</span>秒</span>
+                </div>
+            </div>
+        </div>
+
         <div id="endScreen" class="screen hidden">
             <div class="victory-container">
             </div>
         </div>
     </div>
     
+    <script src="config.js"></script>
+    <script src="objectPool.js"></script>
+    <script src="spatialGrid.js"></script>
+    <script src="pathfinding.js"></script>
+    <script src="offscreenCache.js"></script>
+    <script src="eventSystem.js"></script>
+    <script src="damageNumbers.js"></script>
+    <script src="flocking.js"></script>
+    <script src="enemyRenderer.js"></script>
+    <script src="viewportCulling.js"></script>
     <script src="maps.js"></script>
     <script src="sound.js"></script>
     <script src="player.js"></script>
     <script src="aiPlayer.js"></script>
+    <script src="enemy.js"></script>
+    <script src="waveManager.js"></script>
+    <script src="coopMode.js"></script>
     <script src="bullet.js"></script>
     <script src="obstacle.js"></script>
     <script src="game.js"></script>

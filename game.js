@@ -13,17 +13,20 @@ class Game {
         this.gameMode = 'two';
         this.difficulty = 2;
         this.selectedMapId = 1;
+        this.coopMode = null;
+        this.isCoopMode = false;
         
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
         
-        this.defaultPlayer1Color = '#e94560';
-        this.defaultPlayer2Color = '#4a9eff';
-        this.player1Color = this.defaultPlayer1Color;
-        this.player2Color = this.defaultPlayer2Color;
+        // 玩家配色方案 [主色, 辅色]
+        this.defaultPlayer1Colors = ['#e94560', '#ff6b8a'];
+        this.defaultPlayer2Colors = ['#4a9eff', '#00d4ff'];
+        this.player1Colors = [...this.defaultPlayer1Colors];
+        this.player2Colors = [...this.defaultPlayer2Colors];
         
         this.players = [
-            new Player(100, 400, this.createColorConfig(this.player1Color, 'red'), {
+            new Player(100, 400, this.createColorConfig(this.player1Colors, 'red'), {
                 up: 'KeyW',
                 down: 'KeyS',
                 left: 'KeyA',
@@ -35,7 +38,7 @@ class Game {
                 skill2: 'KeyI',
                 skill3: 'KeyO'
             }, 1, 200),
-            new Player(1250, 400, this.createColorConfig(this.player2Color, 'blue'), {
+            new Player(1250, 400, this.createColorConfig(this.player2Colors, 'blue'), {
                 up: 'ArrowUp',
                 down: 'ArrowDown',
                 left: 'ArrowLeft',
@@ -56,8 +59,8 @@ class Game {
     resizeCanvas() {
         const container = this.canvas.parentElement;
         const rect = container.getBoundingClientRect();
-        const gameWidth = 1400;
-        const gameHeight = 900;
+        const gameWidth = CONFIG.CANVAS.GAME_WIDTH;
+        const gameHeight = CONFIG.CANVAS.GAME_HEIGHT;
         
         const containerWidth = rect.width;
         const containerHeight = rect.height - 50;
@@ -77,6 +80,17 @@ class Game {
             this.keys[e.code] = true;
             
             if (e.code === 'Escape') {
+                // 处理闯关模式的ESC键
+                if (this.isCoopMode && this.coopMode) {
+                    if (this.coopMode.gameState === 'playing') {
+                        this.coopMode.pause();
+                        return;
+                    } else if (this.coopMode.gameState === 'paused') {
+                        this.coopMode.pause(); // toggle
+                        return;
+                    }
+                }
+                
                 if (this.gameState === 'playing') {
                     this.pauseGame();
                 } else if (this.gameState === 'paused') {
@@ -95,9 +109,15 @@ class Game {
                 return;
             }
             
+            // 处理闯关模式输入
+            if (this.isCoopMode && this.coopMode && this.coopMode.gameState === 'playing') {
+                this.handleCoopInput(e);
+            }
+            
             if (this.gameState === 'playing') {
                 if (e.code === this.players[0].controls.melee) {
                     const attack = this.players[0].meleeAttack();
+                    if (attack) soundManager.playMelee();
                 }
                 if (e.code === this.players[0].controls.ranged) {
                     const attack = this.players[0].rangedAttack();
@@ -178,12 +198,172 @@ class Game {
         });
     }
 
-    createColorConfig(hexColor, name) {
-        const r = parseInt(hexColor.slice(1, 3), 16);
-        const g = parseInt(hexColor.slice(3, 5), 16);
-        const b = parseInt(hexColor.slice(5, 7), 16);
+    handleCoopInput(e) {
+        const coop = this.coopMode;
+        if (!coop || !coop.players) return;
         
-        // 计算深色和浅色版本
+        const players = coop.players;
+        
+        // 玩家1输入
+        if (players[0] && players[0].health > 0) {
+            if (e.code === players[0].controls.melee) {
+                const attack = players[0].meleeAttack();
+                if (attack) {
+                    soundManager.playMelee();
+                    let hitSomething = false;
+                    
+                    // 检测近战攻击是否命中敌人
+                    for (const enemy of coop.enemies) {
+                        if (enemy.health > 0 && players[0].checkMeleeHit(enemy)) {
+                            enemy.takeDamage(players[0].meleeDamage);
+                            coop.game.createExplosion(enemy.x + enemy.width/2, enemy.y + enemy.height/2, enemy.colorConfig.medium);
+                            soundManager.playHit();
+                            hitSomething = true;
+                            if (enemy.health <= 0) {
+                                coop.onEnemyKilled(enemy);
+                            }
+                        }
+                    }
+                    
+                    // 检测近战攻击是否命中掩体
+                    if (!hitSomething) {
+                        const meleeResult = this.obstacleManager.damageFromMelee(players[0]);
+                        if (meleeResult.hit) {
+                            coop.game.createExplosion(meleeResult.x, meleeResult.y, '#888888');
+                            soundManager.playMelee();
+                            hitSomething = true;
+                        }
+                    }
+                }
+            }
+            if (e.code === players[0].controls.ranged) {
+                const attack = players[0].rangedAttack();
+                if (attack) {
+                    coop.bullets.push(new Bullet(attack.x, attack.y, attack.direction, attack.damage, attack.owner, players[0].colorConfig));
+                    soundManager.playShoot();
+                }
+            }
+            if (e.code === players[0].controls.skill1) {
+                if (players[0].skill1()) {
+                    this.createHealingEffect(players[0]);
+                    soundManager.playSkill1();
+                }
+            }
+            if (e.code === players[0].controls.skill2) {
+                if (players[0].skill2(this.obstacleManager.obstacles)) {
+                    this.createDashEffect(players[0]);
+                    soundManager.playSkill2();
+                }
+            }
+            if (e.code === players[0].controls.skill3) {
+                const blast = players[0].skill3();
+                if (blast) {
+                    this.createBlastEffect(players[0]);
+                    // 对周围敌人造成伤害
+                    for (const enemy of coop.enemies) {
+                        if (enemy.health > 0) {
+                            const dist = Math.sqrt(Math.pow(enemy.x - blast.x, 2) + Math.pow(enemy.y - blast.y, 2));
+                            if (dist < blast.radius) {
+                                enemy.takeDamage(blast.damage);
+                                if (enemy.health <= 0) {
+                                    coop.onEnemyKilled(enemy);
+                                }
+                            }
+                        }
+                    }
+                    soundManager.playSkill3();
+                }
+            }
+        }
+        
+        // 玩家2输入（如果有）
+        if (players[1] && players[1].health > 0) {
+            if (e.code === players[1].controls.melee) {
+                const attack = players[1].meleeAttack();
+                if (attack) {
+                    soundManager.playMelee();
+                    let hitSomething = false;
+                    
+                    // 检测近战攻击是否命中敌人
+                    for (const enemy of coop.enemies) {
+                        if (enemy.health > 0 && players[1].checkMeleeHit(enemy)) {
+                            enemy.takeDamage(players[1].meleeDamage);
+                            coop.game.createExplosion(enemy.x + enemy.width/2, enemy.y + enemy.height/2, enemy.colorConfig.medium);
+                            soundManager.playHit();
+                            hitSomething = true;
+                            if (enemy.health <= 0) {
+                                coop.onEnemyKilled(enemy);
+                            }
+                        }
+                    }
+                    
+                    // 检测近战攻击是否命中掩体
+                    if (!hitSomething) {
+                        const meleeResult = this.obstacleManager.damageFromMelee(players[1]);
+                        if (meleeResult.hit) {
+                            coop.game.createExplosion(meleeResult.x, meleeResult.y, '#888888');
+                            soundManager.playMelee();
+                            hitSomething = true;
+                        }
+                    }
+                }
+            }
+            if (e.code === players[1].controls.ranged) {
+                const attack = players[1].rangedAttack();
+                if (attack) {
+                    coop.bullets.push(new Bullet(attack.x, attack.y, attack.direction, attack.damage, attack.owner, players[1].colorConfig));
+                    soundManager.playShoot();
+                }
+            }
+            if (e.code === players[1].controls.skill1) {
+                if (players[1].skill1()) {
+                    this.createHealingEffect(players[1]);
+                    soundManager.playSkill1();
+                }
+            }
+            if (e.code === players[1].controls.skill2) {
+                if (players[1].skill2(this.obstacleManager.obstacles)) {
+                    this.createDashEffect(players[1]);
+                    soundManager.playSkill2();
+                }
+            }
+            if (e.code === players[1].controls.skill3) {
+                const blast = players[1].skill3();
+                if (blast) {
+                    this.createBlastEffect(players[1]);
+                    for (const enemy of coop.enemies) {
+                        if (enemy.health > 0) {
+                            const dist = Math.sqrt(Math.pow(enemy.x - blast.x, 2) + Math.pow(enemy.y - blast.y, 2));
+                            if (dist < blast.radius) {
+                                enemy.takeDamage(blast.damage);
+                                if (enemy.health <= 0) {
+                                    coop.onEnemyKilled(enemy);
+                                }
+                            }
+                        }
+                    }
+                    soundManager.playSkill3();
+                }
+            }
+        }
+    }
+
+    createColorConfig(colors, name) {
+        // colors可以是字符串（兼容旧版）或数组 [主色, 辅色]
+        let primaryColor, secondaryColor;
+        if (Array.isArray(colors)) {
+            primaryColor = colors[0];
+            secondaryColor = colors[1] || colors[0];
+        } else {
+            primaryColor = colors;
+            secondaryColor = colors;
+        }
+        
+        const r = parseInt(primaryColor.slice(1, 3), 16);
+        const g = parseInt(primaryColor.slice(3, 5), 16);
+        const b = parseInt(primaryColor.slice(5, 7), 16);
+        
+        // 计算深色和浅色版本（基于主色）
         const darkR = Math.floor(r * 0.7);
         const darkG = Math.floor(g * 0.7);
         const darkB = Math.floor(b * 0.7);
@@ -202,9 +382,10 @@ class Game {
         
         return {
             name: name,
-            medium: hexColor,
+            medium: primaryColor,
             dark: darkColor,
-            light: lightColor
+            light: lightColor,
+            secondary: secondaryColor
         };
     }
 
@@ -217,6 +398,46 @@ class Game {
         document.getElementById('twoPlayerBtn').addEventListener('click', () => {
             this.gameMode = 'two';
             this.showScreen('mapSelectionScreen');
+        });
+        
+        // 闯关模式 - 分步选择
+        this.coopPlayerCount = 1;
+        this.coopDifficulty = 'easy';
+        
+        document.getElementById('coopModeBtn').addEventListener('click', () => {
+            this.isCoopMode = true;
+            this.coopPlayerCount = 1;
+            this.showScreen('coopPlayerScreen');
+        });
+        
+        // 第1步：选择人数
+        document.getElementById('coopSingleBtn').addEventListener('click', () => {
+            this.coopPlayerCount = 1;
+            this.showScreen('coopDifficultyScreen');
+            document.getElementById('coopPlayerSummary').textContent = '👤 单人';
+        });
+        
+        document.getElementById('coopDoubleBtn').addEventListener('click', () => {
+            this.coopPlayerCount = 2;
+            this.showScreen('coopDifficultyScreen');
+            document.getElementById('coopPlayerSummary').textContent = '👥 双人';
+        });
+        
+        document.getElementById('backFromCoopPlayerBtn').addEventListener('click', () => {
+            this.isCoopMode = false;
+            this.showScreen('startScreen');
+        });
+        
+        // 第2步：选择难度
+        document.querySelectorAll('[data-difficulty]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.coopDifficulty = btn.dataset.difficulty;
+                this.startCoopMode(this.coopDifficulty, this.coopPlayerCount);
+            });
+        });
+        
+        document.getElementById('backFromCoopDiffBtn').addEventListener('click', () => {
+            this.showScreen('coopPlayerScreen');
         });
         
         document.getElementById('easyBtn').addEventListener('click', () => {
@@ -339,31 +560,40 @@ class Game {
         dayThemeBtn.addEventListener('click', () => switchTheme('day'));
         nightThemeBtn.addEventListener('click', () => switchTheme('night'));
         
-        const player1ColorInput = document.getElementById('player1Color');
+        // 双色配色选择器
+        const player1PrimaryInput = document.getElementById('player1PrimaryColor');
+        const player1SecondaryInput = document.getElementById('player1SecondaryColor');
         const player1Preview = document.getElementById('player1Preview');
-        const player2ColorInput = document.getElementById('player2Color');
+        const player2PrimaryInput = document.getElementById('player2PrimaryColor');
+        const player2SecondaryInput = document.getElementById('player2SecondaryColor');
         const player2Preview = document.getElementById('player2Preview');
         
-        const updatePlayer1Color = (color) => {
-            this.player1Color = color;
-            player1Preview.style.backgroundColor = color;
-            localStorage.setItem('player1Color', color);
-            this.players[0].colorConfig = this.createColorConfig(color, 'red');
+        const updatePlayer1Colors = (primary, secondary) => {
+            this.player1Colors = [primary, secondary];
+            player1Preview.style.background = `linear-gradient(135deg, ${primary} 50%, ${secondary} 50%)`;
+            localStorage.setItem('player1Colors', JSON.stringify(this.player1Colors));
+            this.players[0].colorConfig = this.createColorConfig(this.player1Colors, 'red');
         };
         
-        const updatePlayer2Color = (color) => {
-            this.player2Color = color;
-            player2Preview.style.backgroundColor = color;
-            localStorage.setItem('player2Color', color);
-            this.players[1].colorConfig = this.createColorConfig(color, 'blue');
+        const updatePlayer2Colors = (primary, secondary) => {
+            this.player2Colors = [primary, secondary];
+            player2Preview.style.background = `linear-gradient(135deg, ${primary} 50%, ${secondary} 50%)`;
+            localStorage.setItem('player2Colors', JSON.stringify(this.player2Colors));
+            this.players[1].colorConfig = this.createColorConfig(this.player2Colors, 'blue');
         };
         
-        player1ColorInput.addEventListener('input', (e) => {
-            updatePlayer1Color(e.target.value);
+        player1PrimaryInput.addEventListener('input', (e) => {
+            updatePlayer1Colors(e.target.value, player1SecondaryInput.value);
+        });
+        player1SecondaryInput.addEventListener('input', (e) => {
+            updatePlayer1Colors(player1PrimaryInput.value, e.target.value);
         });
         
-        player2ColorInput.addEventListener('input', (e) => {
-            updatePlayer2Color(e.target.value);
+        player2PrimaryInput.addEventListener('input', (e) => {
+            updatePlayer2Colors(e.target.value, player2SecondaryInput.value);
+        });
+        player2SecondaryInput.addEventListener('input', (e) => {
+            updatePlayer2Colors(player2PrimaryInput.value, e.target.value);
         });
         
         const savedTheme = localStorage.getItem('gameTheme');
@@ -371,16 +601,21 @@ class Game {
             switchTheme('day');
         }
         
-        const savedPlayer1Color = localStorage.getItem('player1Color');
-        if (savedPlayer1Color) {
-            player1ColorInput.value = savedPlayer1Color;
-            updatePlayer1Color(savedPlayer1Color);
+        // 加载保存的配色
+        const savedPlayer1Colors = localStorage.getItem('player1Colors');
+        if (savedPlayer1Colors) {
+            const colors = JSON.parse(savedPlayer1Colors);
+            player1PrimaryInput.value = colors[0];
+            player1SecondaryInput.value = colors[1];
+            updatePlayer1Colors(colors[0], colors[1]);
         }
         
-        const savedPlayer2Color = localStorage.getItem('player2Color');
-        if (savedPlayer2Color) {
-            player2ColorInput.value = savedPlayer2Color;
-            updatePlayer2Color(savedPlayer2Color);
+        const savedPlayer2Colors = localStorage.getItem('player2Colors');
+        if (savedPlayer2Colors) {
+            const colors = JSON.parse(savedPlayer2Colors);
+            player2PrimaryInput.value = colors[0];
+            player2SecondaryInput.value = colors[1];
+            updatePlayer2Colors(colors[0], colors[1]);
         }
         
         // 音效设置
@@ -537,8 +772,8 @@ class Game {
         ctx.strokeRect(padding, padding, mapWidth, mapHeight);
         
         if (map) {
-            const scaleX = mapWidth / 1400;
-            const scaleY = mapHeight / 900;
+            const scaleX = mapWidth / CONFIG.CANVAS.GAME_WIDTH;
+        const scaleY = mapHeight / CONFIG.CANVAS.GAME_HEIGHT;
             
             map.obstacles.forEach((obs, index) => {
                 const x = padding + obs.x * scaleX;
@@ -632,11 +867,23 @@ class Game {
     }
 
     pauseGame() {
+        // 如果是闯关模式，使用闯关模式的暂停逻辑
+        if (this.isCoopMode && this.coopMode && this.coopMode.gameState === 'playing') {
+            this.coopMode.pause();
+            return;
+        }
+        
         this.gameState = 'paused';
         document.getElementById('pauseOverlay').classList.remove('hidden');
     }
 
     resumeGame() {
+        // 如果是闯关模式，使用闯关模式的恢复逻辑
+        if (this.isCoopMode && this.coopMode && this.coopMode.gameState === 'paused') {
+            this.coopMode.pause();
+            return;
+        }
+        
         this.gameState = 'playing';
         document.getElementById('pauseOverlay').classList.add('hidden');
         this.gameLoop();
@@ -644,23 +891,50 @@ class Game {
 
     restartGame() {
         document.getElementById('pauseOverlay').classList.add('hidden');
+        
+        // 如果是闯关模式，使用闯关模式的重启逻辑
+        if (this.isCoopMode && this.coopMode) {
+            this.coopMode.pause(); // 先取消暂停状态
+            this.coopMode.start(this.coopMode.difficulty, this.coopMode.playerCount);
+            return;
+        }
+        
         this.startGame();
     }
 
     goToHome() {
         document.getElementById('pauseOverlay').classList.add('hidden');
         this.gameState = 'menu';
+        
+        // 清理闯关模式状态
+        if (this.isCoopMode && this.coopMode) {
+            this.coopMode.stop();
+            this.coopMode = null;
+            this.isCoopMode = false;
+        }
+        
         this.showScreen('startScreen');
     }
 
+    startCoopMode(difficulty, playerCount = 1) {
+        this.isCoopMode = true;
+        if (!this.coopMode) {
+            this.coopMode = new CoopMode(this);
+        }
+        this.coopMode.start(difficulty, playerCount);
+        this.showScreen('gameScreen');
+    }
+
     startGame(mapId = null) {
+        this.isCoopMode = false;
+        if (this.coopMode) this.coopMode.stop();
         if (mapId !== null) {
             this.selectedMapId = mapId;
         }
         
         this.level = 1;
         
-        this.players[0] = new Player(100, 400, this.createColorConfig(this.player1Color, 'red'), {
+        this.players[0] = new Player(100, 400, this.createColorConfig(this.player1Colors, 'red'), {
             up: 'KeyW',
             down: 'KeyS',
             left: 'KeyA',
@@ -674,7 +948,7 @@ class Game {
         }, 1, this.healthLimit);
         
         if (this.gameMode === 'single') {
-            this.players[1] = new AIPlayer(1250, 400, this.createColorConfig(this.player2Color, 'blue'), {
+            this.players[1] = new AIPlayer(1250, 400, this.createColorConfig(this.player2Colors, 'blue'), {
                 up: 'ArrowUp',
                 down: 'ArrowDown',
                 left: 'ArrowLeft',
@@ -688,7 +962,7 @@ class Game {
             }, 2, this.healthLimit, this.difficulty);
             this.players[1].setTarget(this.players[0]);
         } else {
-            this.players[1] = new Player(1250, 400, this.createColorConfig(this.player2Color, 'blue'), {
+            this.players[1] = new Player(1250, 400, this.createColorConfig(this.player2Colors, 'blue'), {
                 up: 'ArrowUp',
                 down: 'ArrowDown',
                 left: 'ArrowLeft',
@@ -712,6 +986,7 @@ class Game {
         }
         
         this.showScreen('gameScreen');
+        this.hideMinimap();
         this.updateUI();
         this.startCountdown();
     }
@@ -761,6 +1036,13 @@ class Game {
     showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
         document.getElementById(screenId).classList.remove('hidden');
+    }
+
+    hideMinimap() {
+        const minimapContainer = document.getElementById('minimapContainer');
+        if (minimapContainer) {
+            minimapContainer.classList.add('hidden');
+        }
     }
 
     update() {
@@ -991,6 +1273,7 @@ class Game {
     }
 
     checkGameOver() {
+        if (!this.players[0] || !this.players[1]) return;
         if (this.players[0].health <= 0) {
             this.endGame(2);
         } else if (this.players[1].health <= 0) {
@@ -1002,12 +1285,12 @@ class Game {
         soundManager.stopMusic();
         
         if (winner === 1) {
-            this.players[0].isWinner = true;
-            this.players[1].isDefeated = true;
+            if (this.players[0]) this.players[0].isWinner = true;
+            if (this.players[1]) this.players[1].isDefeated = true;
             soundManager.playVictory();
         } else {
-            this.players[1].isWinner = true;
-            this.players[0].isDefeated = true;
+            if (this.players[1]) this.players[1].isWinner = true;
+            if (this.players[0]) this.players[0].isDefeated = true;
             soundManager.playDefeat();
         }
         
@@ -1019,7 +1302,7 @@ class Game {
         const victoryContainer = endScreen.querySelector('.victory-container');
         
         victoryContainer.innerHTML = `
-            <h1 class="title pixel-text" style="color: ${winner === 1 ? this.player1Color : this.player2Color};">
+            <h1 class="title pixel-text" style="color: ${winner === 1 ? this.player1Colors[0] : this.player2Colors[0]};">
                 ${winner === 1 ? '🎉 红方获胜！🎉' : '🎉 蓝方获胜！🎉'}
             </h1>
             <div class="victory-decoration">
@@ -1090,25 +1373,41 @@ class Game {
     }
 
     updateUI() {
-        document.getElementById('health1').style.width = (this.players[0].health / this.players[0].maxHealth * 100) + '%';
-        document.getElementById('health2').style.width = (this.players[1].health / this.players[1].maxHealth * 100) + '%';
-        document.getElementById('healthText1').textContent = Math.ceil(this.players[0].health);
-        document.getElementById('healthText2').textContent = Math.ceil(this.players[1].health);
-        document.getElementById('level').textContent = this.level;
-        
+        if (this.isCoopMode) return;
+
+        const health1 = document.getElementById('health1');
+        const health2 = document.getElementById('health2');
+        if (!health1 || !health2) return;
+
+        health1.style.width = (this.players[0].health / this.players[0].maxHealth * 100) + '%';
+        health2.style.width = (this.players[1].health / this.players[1].maxHealth * 100) + '%';
+        const healthText1 = document.getElementById('healthText1');
+        const healthText2 = document.getElementById('healthText2');
+        const levelEl = document.getElementById('level');
+        if (healthText1) healthText1.textContent = Math.ceil(this.players[0].health);
+        if (healthText2) healthText2.textContent = Math.ceil(this.players[1].health);
+        if (levelEl) levelEl.textContent = this.level;
+
         const skill1Cooldown1 = (this.players[0].skill1Cooldown / this.players[0].skill1MaxCooldown * 100);
         const skill1Cooldown2 = (this.players[1].skill1Cooldown / this.players[1].skill1MaxCooldown * 100);
         const skill2Cooldown1 = (this.players[0].skill2Cooldown / this.players[0].skill2MaxCooldown * 100);
         const skill2Cooldown2 = (this.players[1].skill2Cooldown / this.players[1].skill2MaxCooldown * 100);
         const skill3Cooldown1 = (this.players[0].skill3Cooldown / this.players[0].skill3MaxCooldown * 100);
         const skill3Cooldown2 = (this.players[1].skill3Cooldown / this.players[1].skill3MaxCooldown * 100);
-        
-        document.getElementById('skill1-cooldown-p1').style.height = skill1Cooldown1 + '%';
-        document.getElementById('skill1-cooldown-p2').style.height = skill1Cooldown2 + '%';
-        document.getElementById('skill2-cooldown-p1').style.height = skill2Cooldown1 + '%';
-        document.getElementById('skill2-cooldown-p2').style.height = skill2Cooldown2 + '%';
-        document.getElementById('skill3-cooldown-p1').style.height = skill3Cooldown1 + '%';
-        document.getElementById('skill3-cooldown-p2').style.height = skill3Cooldown2 + '%';
+
+        const skill1CooldownP1 = document.getElementById('skill1-cooldown-p1');
+        const skill1CooldownP2 = document.getElementById('skill1-cooldown-p2');
+        const skill2CooldownP1 = document.getElementById('skill2-cooldown-p1');
+        const skill2CooldownP2 = document.getElementById('skill2-cooldown-p2');
+        const skill3CooldownP1 = document.getElementById('skill3-cooldown-p1');
+        const skill3CooldownP2 = document.getElementById('skill3-cooldown-p2');
+
+        if (skill1CooldownP1) skill1CooldownP1.style.height = skill1Cooldown1 + '%';
+        if (skill1CooldownP2) skill1CooldownP2.style.height = skill1Cooldown2 + '%';
+        if (skill2CooldownP1) skill2CooldownP1.style.height = skill2Cooldown1 + '%';
+        if (skill2CooldownP2) skill2CooldownP2.style.height = skill2Cooldown2 + '%';
+        if (skill3CooldownP1) skill3CooldownP1.style.height = skill3Cooldown1 + '%';
+        if (skill3CooldownP2) skill3CooldownP2.style.height = skill3Cooldown2 + '%';
     }
 
     render() {
@@ -1116,7 +1415,7 @@ class Game {
         
         // 背景色
         this.ctx.fillStyle = isDayMode ? '#e6f2ff' : '#1a1a2e';
-        this.ctx.fillRect(0, 0, 1400, 900);
+        this.ctx.fillRect(0, 0, CONFIG.CANVAS.GAME_WIDTH, CONFIG.CANVAS.GAME_HEIGHT);
         
         this.drawGrid(isDayMode);
         
@@ -1133,17 +1432,17 @@ class Game {
         this.ctx.strokeStyle = isDayMode ? 'rgba(74, 158, 255, 0.2)' : 'rgba(15, 52, 96, 0.3)';
         this.ctx.lineWidth = 1;
         
-        for (let x = 0; x < 1400; x += 50) {
+        for (let x = 0; x < CONFIG.CANVAS.GAME_WIDTH; x += CONFIG.CANVAS.GRID_SIZE) {
             this.ctx.beginPath();
             this.ctx.moveTo(x, 0);
-            this.ctx.lineTo(x, 900);
+            this.ctx.lineTo(x, CONFIG.CANVAS.GAME_HEIGHT);
             this.ctx.stroke();
         }
         
-        for (let y = 0; y < 900; y += 50) {
+        for (let y = 0; y < CONFIG.CANVAS.GAME_HEIGHT; y += CONFIG.CANVAS.GRID_SIZE) {
             this.ctx.beginPath();
             this.ctx.moveTo(0, y);
-            this.ctx.lineTo(1400, y);
+            this.ctx.lineTo(CONFIG.CANVAS.GAME_WIDTH, y);
             this.ctx.stroke();
         }
     }

@@ -89,7 +89,7 @@ class AIPlayer extends Player {
         this.obstacles = obstacles;
     }
 
-    update(keys, isDayMode) {
+    update(keys, isDayMode, obstacles = [], mapWidth = 1400, mapHeight = 900) {
         if (this.isDashing) {
             this.dashTimer--;
             if (this.dashTimer <= 0) {
@@ -127,10 +127,100 @@ class AIPlayer extends Player {
             };
         }
 
-        this.x += this.vx;
-        this.y += this.vy;
-        this.x = Math.max(0, Math.min(1400 - this.width, this.x));
-        this.y = Math.max(0, Math.min(900 - this.height, this.y));
+        // 计算新位置
+        let newX = this.x + this.vx;
+        let newY = this.y + this.vy;
+
+        // 边界限制 - 使用传入的地图尺寸
+        newX = Math.max(0, Math.min(mapWidth - this.width, newX));
+        newY = Math.max(0, Math.min(mapHeight - this.height, newY));
+
+        // 障碍物碰撞检测 - 改进的分离轴检测，支持沿墙滑动
+        if (obstacles && obstacles.length > 0) {
+            // 先尝试X轴移动
+            let xBlocked = false;
+            const xRect = { x: newX, y: this.y, width: this.width, height: this.height };
+            
+            for (const obs of obstacles) {
+                if (obs.destroyed) continue;
+                if (this.checkRectCollision(xRect, obs)) {
+                    xBlocked = true;
+                    break;
+                }
+            }
+            
+            if (xBlocked) {
+                newX = this.x; // 阻止X轴移动
+            }
+            
+            // 再尝试Y轴移动（使用更新后的X或原始X）
+            let yBlocked = false;
+            const yRect = { x: xBlocked ? this.x : newX, y: newY, width: this.width, height: this.height };
+            
+            for (const obs of obstacles) {
+                if (obs.destroyed) continue;
+                if (this.checkRectCollision(yRect, obs)) {
+                    yBlocked = true;
+                    break;
+                }
+            }
+            
+            if (yBlocked) {
+                newY = this.y; // 阻止Y轴移动
+            }
+            
+            // 如果两个轴都被阻挡，尝试沿墙滑动（找最近的开口）
+            if (xBlocked && yBlocked) {
+                const slideDirections = [
+                    { x: this.speed, y: 0 },
+                    { x: -this.speed, y: 0 },
+                    { x: 0, y: this.speed },
+                    { x: 0, y: -this.speed },
+                    { x: this.speed * 0.7, y: this.speed * 0.7 },
+                    { x: -this.speed * 0.7, y: this.speed * 0.7 },
+                    { x: this.speed * 0.7, y: -this.speed * 0.7 },
+                    { x: -this.speed * 0.7, y: -this.speed * 0.7 }
+                ];
+                
+                let bestDir = null;
+                let bestDist = Infinity;
+                
+                for (const dir of slideDirections) {
+                    const testX = this.x + dir.x;
+                    const testY = this.y + dir.y;
+                    const testRect = { x: testX, y: testY, width: this.width, height: this.height };
+                    
+                    let collided = false;
+                    for (const obs of obstacles) {
+                        if (obs.destroyed) continue;
+                        if (this.checkRectCollision(testRect, obs)) {
+                            collided = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!collided) {
+                        // 计算这个方向与目标方向的一致性
+                        const dirDist = Math.sqrt(
+                            Math.pow(testX - (this.x + this.vx), 2) + 
+                            Math.pow(testY - (this.y + this.vy), 2)
+                        );
+                        if (dirDist < bestDist) {
+                            bestDist = dirDist;
+                            bestDir = { x: testX, y: testY };
+                        }
+                    }
+                }
+                
+                if (bestDir) {
+                    newX = bestDir.x;
+                    newY = bestDir.y;
+                }
+            }
+        }
+
+        this.x = newX;
+        this.y = newY;
 
         if (this.meleeCooldown > 0) this.meleeCooldown--;
         if (this.rangedCooldown > 0) this.rangedCooldown--;
@@ -156,6 +246,13 @@ class AIPlayer extends Player {
         if (this.isWinner) {
             this.crownBounce += 0.1;
         }
+    }
+
+    checkRectCollision(rect1, rect2) {
+        return rect1.x < rect2.x + rect2.width &&
+               rect1.x + rect1.width > rect2.x &&
+               rect1.y < rect2.y + rect2.height &&
+               rect1.y + rect1.height > rect2.y;
     }
 
     updateAI() {
@@ -570,8 +667,17 @@ class AIPlayer extends Player {
         const dist = Math.sqrt(dx * dx + dy * dy);
         
         if (dist > 0) {
-            this.moveDir.x = dx / dist;
-            this.moveDir.y = dy / dist;
+            // 使用寻路系统获取移动方向
+            const moveDir = pathfinder.getMoveDirection(
+                this,
+                this.target.x + this.target.width / 2,
+                this.target.y + this.target.height / 2,
+                this.obstacles,
+                this.mapWidth || 1400,
+                this.mapHeight || 900
+            );
+            
+            this.moveDir = moveDir;
         }
     }
 
@@ -583,8 +689,20 @@ class AIPlayer extends Player {
         const dist = Math.sqrt(dx * dx + dy * dy);
         
         if (dist > 0) {
-            this.moveDir.x = dx / dist;
-            this.moveDir.y = dy / dist;
+            // 后退时也考虑障碍物
+            const retreatX = this.x + (dx / dist) * this.speed * 5;
+            const retreatY = this.y + (dy / dist) * this.speed * 5;
+            
+            const moveDir = pathfinder.getMoveDirection(
+                this,
+                retreatX,
+                retreatY,
+                this.obstacles,
+                this.mapWidth || 1400,
+                this.mapHeight || 900
+            );
+            
+            this.moveDir = moveDir;
         }
     }
 
@@ -600,8 +718,20 @@ class AIPlayer extends Player {
             const time = Date.now() / 1000;
             const strafeDir = Math.sin(time * 2) > 0 ? 1 : -1;
             
-            this.moveDir.x = perpX * strafeDir * 0.7;
-            this.moveDir.y = perpY * strafeDir * 0.7;
+            // 使用寻路系统确保横向移动不会撞墙
+            const targetX = this.x + perpX * strafeDir * this.speed * 3;
+            const targetY = this.y + perpY * strafeDir * this.speed * 3;
+            
+            const moveDir = pathfinder.getMoveDirection(
+                this,
+                targetX,
+                targetY,
+                this.obstacles,
+                this.mapWidth || 1400,
+                this.mapHeight || 900
+            );
+            
+            this.moveDir = moveDir;
         }
     }
 

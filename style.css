@@ -907,6 +907,40 @@ body.day-mode .volume-control input[type="range"] {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
+/* 双色配色选择器 */
+.dual-color-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 2px solid #0f3460;
+}
+
+.dual-color-input-wrapper input[type="color"] {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.color-preview.dual {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.setting-desc {
+    font-size: clamp(10px, 1.5vw, 12px);
+    color: #888;
+    margin-top: 2px;
+}
+
 .health-setting label {
     font-size: clamp(14px, 2.5vw, 18px);
     color: #00ff88;
@@ -1599,4 +1633,544 @@ body.day-mode .map-card:hover .map-preview {
 
 .map-grid::-webkit-scrollbar-thumb:hover {
     background: #00ff88;
+}
+
+.minimap-container {
+    position: absolute;
+    top: 85px;
+    right: 8px;
+    width: 180px;
+    height: 115px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #0f3460;
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 100;
+    box-shadow: 0 0 15px rgba(15, 52, 96, 0.5);
+}
+
+.minimap-container.hidden {
+    display: none;
+}
+
+#minimapCanvas {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+}
+
+body.day-mode .minimap-container {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: #4a9eff;
+    box-shadow: 0 0 15px rgba(74, 158, 255, 0.3);
+}
+
+/* 步骤指示器 */
+.coop-step-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 20px 0;
+}
+
+.step {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(15, 52, 96, 0.5);
+    border: 2px solid #0f3460;
+    color: #888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.step.active {
+    background: linear-gradient(180deg, #e94560 0%, #c73e54 100%);
+    border-color: #ff6b8a;
+    color: white;
+    box-shadow: 0 0 15px rgba(233, 69, 96, 0.5);
+}
+
+.step.done {
+    background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+    border-color: #4ade80;
+    color: white;
+}
+
+.step-line {
+    width: 60px;
+    height: 2px;
+    background: #0f3460;
+    transition: all 0.3s;
+}
+
+.step-line.active {
+    background: linear-gradient(90deg, #22c55e 0%, #e94560 100%);
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.step-title {
+    font-size: clamp(16px, 3vw, 24px);
+    color: #00ff88;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+/* 闯关模式选择界面 */
+.coop-selection-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 500px;
+    padding: 20px;
+}
+
+.coop-selection-section {
+    background: rgba(15, 52, 96, 0.3);
+    border: 2px solid #0f3460;
+    border-radius: 12px;
+    padding: 15px;
+}
+
+.section-title {
+    font-size: clamp(14px, 2.5vw, 20px);
+    color: #00ff88;
+    margin-bottom: 12px;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.selection-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.selection-buttons .pixel-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 20px;
+    min-width: 100px;
+    background: linear-gradient(180deg, #1a1a3e 0%, #0f0f2a 100%);
+    border: 2px solid #0f3460;
+    box-shadow: 0 4px 0 #0f3460;
+}
+
+.selection-buttons .pixel-btn:hover {
+    background: linear-gradient(180deg, #2a2a5e 0%, #1a1a4a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #0f3460;
+}
+
+.selection-buttons .pixel-btn.active {
+    background: linear-gradient(180deg, #e94560 0%, #c73e54 100%);
+    border-color: #ff6b8a;
+    box-shadow: 0 0 20px rgba(233, 69, 96, 0.5), 0 4px 0 #8b1530;
+}
+
+.selection-buttons .pixel-btn.active:hover {
+    background: linear-gradient(180deg, #ff6b8a 0%, #e94560 100%);
+    box-shadow: 0 0 30px rgba(233, 69, 96, 0.8), 0 6px 0 #8b1530;
+}
+
+.btn-icon {
+    font-size: clamp(20px, 4vw, 32px);
+}
+
+.btn-label {
+    font-size: clamp(12px, 2vw, 16px);
+    font-weight: bold;
+}
+
+.btn-desc {
+    font-size: clamp(9px, 1.5vw, 12px);
+    color: #888;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.selection-buttons .pixel-btn.active .btn-desc {
+    color: #ffcccc;
+}
+
+.coop-summary {
+    display: flex;
+    justify-content: center;
+}
+
+.summary-box {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #0f3460;
+    border-radius: 8px;
+    padding: 12px 24px;
+    text-align: center;
+}
+
+.summary-label {
+    color: #888;
+    font-size: clamp(10px, 1.5vw, 14px);
+    margin-right: 8px;
+}
+
+.summary-value {
+    color: #00ff88;
+    font-size: clamp(12px, 2vw, 16px);
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.coop-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.coop-actions .start-btn {
+    background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    box-shadow: 0 4px 0 #0f5c2e;
+    font-size: clamp(16px, 3vw, 24px);
+    padding: 15px 40px;
+    width: 80%;
+    max-width: 300px;
+}
+
+.coop-actions .start-btn:hover {
+    background: linear-gradient(180deg, #4ade80 0%, #22c55e 100%);
+    box-shadow: 0 6px 0 #0f5c2e;
+}
+
+/* 闯关模式游戏内UI优化 */
+.coop-info-left, .coop-info-center, .coop-info-right {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.coop-info-left {
+    align-items: flex-start;
+    min-width: 120px;
+}
+
+.coop-info-center {
+    align-items: center;
+    text-align: center;
+    flex: 1;
+}
+
+.coop-info-right {
+    align-items: flex-end;
+    text-align: right;
+    min-width: 80px;
+}
+
+.coop-mode-header {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.coop-mode-label {
+    font-size: clamp(11px, 1.5vw, 14px);
+    font-weight: bold;
+    color: #ffaa00;
+    text-shadow: 0 0 8px rgba(255, 170, 0, 0.4);
+}
+
+.coop-diff-label {
+    font-size: clamp(10px, 1.3vw, 12px);
+    color: #4a9eff;
+    background: rgba(74, 158, 255, 0.2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #4a9eff;
+}
+
+.coop-players-health {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.player-health-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.player-health-bar .pixel-text {
+    font-size: clamp(9px, 1.2vw, 12px);
+    white-space: nowrap;
+}
+
+.coop-health-bar {
+    width: clamp(60px, 8vw, 100px);
+    height: 6px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #444;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.coop-health-fill {
+    height: 100%;
+    background: linear-gradient(to right, #00ff88, #00cc66);
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+
+.coop-health-fill.low {
+    background: linear-gradient(to right, #ffaa00, #ff8800);
+}
+
+.coop-health-fill.critical {
+    background: linear-gradient(to right, #ff4444, #cc0000);
+}
+
+#waveStatus {
+    font-size: clamp(11px, 1.8vw, 16px);
+    font-weight: bold;
+    color: #ffaa00;
+    text-shadow: 0 0 10px rgba(255, 170, 0, 0.5);
+}
+
+#targetHealth {
+    font-weight: bold;
+    color: #00ff88;
+}
+
+/* 核心状态UI - 闯关模式 */
+.core-status-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid #0f3460;
+    border-radius: 8px;
+    padding: 6px 12px;
+    margin-top: 4px;
+    backdrop-filter: blur(4px);
+}
+
+.core-icon {
+    font-size: clamp(16px, 2.5vw, 24px);
+    animation: corePulse 2s ease-in-out infinite;
+}
+
+@keyframes corePulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.8; }
+}
+
+.core-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 120px;
+}
+
+.core-name {
+    font-size: clamp(9px, 1.2vw, 12px);
+    color: #4a9eff;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.core-health-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.core-health-bar-bg {
+    flex: 1;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 80px;
+}
+
+.core-health-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.core-health-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    animation: healthShimmer 2s infinite;
+}
+
+@keyframes healthShimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.core-health-fill.healthy {
+    background: linear-gradient(to right, #00ff88, #00cc66);
+    box-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+}
+
+.core-health-fill.warning {
+    background: linear-gradient(to right, #ffaa00, #ff8800);
+    box-shadow: 0 0 8px rgba(255, 170, 0, 0.4);
+    animation: warningPulse 1s ease-in-out infinite;
+}
+
+.core-health-fill.critical {
+    background: linear-gradient(to right, #ff4444, #cc0000);
+    box-shadow: 0 0 12px rgba(255, 68, 68, 0.6);
+    animation: criticalPulse 0.5s ease-in-out infinite;
+}
+
+@keyframes warningPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes criticalPulse {
+    0%, 100% { opacity: 1; transform: scaleY(1); }
+    50% { opacity: 0.6; transform: scaleY(1.2); }
+}
+
+.core-health-text {
+    font-size: clamp(10px, 1.3vw, 14px);
+    font-weight: bold;
+    min-width: 36px;
+    text-align: right;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+/* 核心受击动画效果 */
+.core-damage-flash {
+    animation: coreDamageFlash 0.3s ease-out;
+}
+
+@keyframes coreDamageFlash {
+    0% { border-color: #ff4444; box-shadow: 0 0 20px rgba(255, 68, 68, 0.8); }
+    100% { border-color: #0f3460; box-shadow: none; }
+}
+
+#livesDisplay {
+    font-size: clamp(12px, 2vw, 18px);
+    letter-spacing: 2px;
+}
+
+/* 升级界面样式 */
+.upgrade-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    padding: 20px;
+}
+
+.upgrade-options {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.upgrade-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 30px 25px;
+    min-width: 150px;
+    background: linear-gradient(180deg, #1a1a3e 0%, #0f0f2a 100%);
+    border: 3px solid #0f3460;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 0 #0f3460;
+}
+
+.upgrade-card:hover {
+    background: linear-gradient(180deg, #2a2a5e 0%, #1a1a4a 100%);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 0 #0f3460, 0 0 30px rgba(74, 158, 255, 0.3);
+    border-color: #4a9eff;
+}
+
+.upgrade-card:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 0 #0f3460;
+}
+
+.upgrade-icon {
+    font-size: clamp(32px, 6vw, 48px);
+}
+
+.upgrade-name {
+    font-size: clamp(16px, 3vw, 22px);
+    font-weight: bold;
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.upgrade-desc {
+    font-size: clamp(12px, 2vw, 16px);
+    color: #ccc;
+}
+
+.upgrade-value {
+    font-size: clamp(11px, 1.8vw, 14px);
+    color: #888;
+    margin-top: 5px;
+}
+
+.upgrade-timer {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #0f3460;
+    border-radius: 8px;
+    padding: 10px 30px;
+}
+
+.upgrade-timer .pixel-text {
+    color: #ffaa00;
+    font-size: clamp(14px, 2.5vw, 18px);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .coop-info-left, .coop-info-center, .coop-info-right {
+        font-size: 10px;
+    }
+    
+    .player-health-bar .pixel-text {
+        font-size: 9px;
+    }
+    
+    .coop-health-bar {
+        width: 50px;
+        height: 4px;
+    }
+    
+    .upgrade-card {
+        padding: 20px 15px;
+        min-width: 120px;
+    }
 }

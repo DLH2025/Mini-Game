@@ -21,6 +21,9 @@ class Obstacle {
             this.health = 0;
             this.destroyed = true;
             this.generateDebris();
+            // 标记障碍物缓存为脏，需要重新渲染
+            offscreenCache.markDirty('obstacles_day_' + this.constructor.obstacleCount);
+            offscreenCache.markDirty('obstacles_night_' + this.constructor.obstacleCount);
             return true;
         }
         return false;
@@ -204,11 +207,11 @@ class ObstacleManager {
         this.obstacles = [];
     }
 
-    generateObstacles(level, mapId = null) {
+    generateObstacles(level, mapId = null, mapWidth = 1400, mapHeight = 900) {
         if (mapId && MAPS[mapId - 1]) {
             this.generateFromMap(MAPS[mapId - 1]);
         } else {
-            this.generateRandom(level);
+            this.generateRandom(level, mapWidth, mapHeight);
         }
     }
 
@@ -219,11 +222,9 @@ class ObstacleManager {
         });
     }
 
-    generateRandom(level) {
+    generateRandom(level, mapWidth = 1400, mapHeight = 900) {
         this.obstacles = [];
         
-        const mapWidth = 1400;
-        const mapHeight = 900;
         const gridSize = 100;
         const cols = Math.floor(mapWidth / gridSize);
         const rows = Math.floor(mapHeight / gridSize);
@@ -234,10 +235,13 @@ class ObstacleManager {
         const safeZoneCols = 1;
         const safeZoneRows = 2;
         
-        const playerSafeZoneLeft = 250;
-        const playerSafeZoneRight = 1150;
-        const playerSafeZoneTop = 300;
-        const playerSafeZoneBottom = 550;
+        // 玩家出生安全区域 - 根据地图尺寸动态计算
+        // 玩家1出生在左侧 (mapWidth * 0.18, mapHeight * 0.39)
+        // 玩家2出生在左侧 (mapWidth * 0.18, mapHeight * 0.61)
+        const playerSafeZoneLeft = 0;
+        const playerSafeZoneRight = mapWidth * 0.4;
+        const playerSafeZoneTop = mapHeight * 0.3;
+        const playerSafeZoneBottom = mapHeight * 0.7;
         
         let grid = [];
         for (let r = 0; r < rows; r++) {
@@ -246,9 +250,7 @@ class ObstacleManager {
                 const gridX = c * gridSize;
                 const gridY = r * gridSize;
                 
-                let inPlayerSafeZone = (gridX + gridSize > 50 && gridX < playerSafeZoneLeft && 
-                                        gridY + gridSize > playerSafeZoneTop && gridY < playerSafeZoneBottom) ||
-                                       (gridX + gridSize > playerSafeZoneRight && gridX < 1350 && 
+                let inPlayerSafeZone = (gridX + gridSize > 50 && gridX < playerSafeZoneRight && 
                                         gridY + gridSize > playerSafeZoneTop && gridY < playerSafeZoneBottom);
                 
                 if (inPlayerSafeZone) {
@@ -300,6 +302,96 @@ class ObstacleManager {
             }
         }
         
+        // 确保每行至少有一个通行缺口（至少2个连续的false格子）
+        for (let r = 0; r < rows; r++) {
+            let hasGap = false;
+            let consecutiveEmpty = 0;
+            
+            // 检查当前行是否已有至少2个连续的空格
+            for (let c = 0; c < cols; c++) {
+                if (!grid[r][c]) {
+                    consecutiveEmpty++;
+                    if (consecutiveEmpty >= 2) {
+                        hasGap = true;
+                        break;
+                    }
+                } else {
+                    consecutiveEmpty = 0;
+                }
+            }
+            
+            // 如果没有缺口，强制创建一个
+            if (!hasGap) {
+                // 优先在远离中心的位置创建缺口（避免破坏中心战斗区域）
+                // 尝试在左侧或右侧边缘创建缺口
+                const gapPositions = [];
+                
+                // 收集左侧可能的缺口位置（远离中心）
+                for (let c = 0; c < centerCol - 2; c++) {
+                    if (!grid[r][c]) {
+                        gapPositions.push(c);
+                    }
+                }
+                
+                // 收集右侧可能的缺口位置
+                for (let c = centerCol + 2; c < cols; c++) {
+                    if (!grid[r][c]) {
+                        gapPositions.push(c);
+                    }
+                }
+                
+                // 如果有单个空格，尝试在其旁边再创建一个
+                if (gapPositions.length > 0) {
+                    const pos = gapPositions[Math.floor(Math.random() * gapPositions.length)];
+                    // 在相邻位置创建另一个空格
+                    const neighbor = pos > 0 && !grid[r][pos - 1] ? pos + 1 : pos - 1;
+                    if (neighbor >= 0 && neighbor < cols) {
+                        grid[r][neighbor] = false;
+                    }
+                } else {
+                    // 完全没有空格，强制在左侧边缘创建2个连续空格
+                    const gapStart = Math.floor(Math.random() * Math.max(1, centerCol - 3));
+                    grid[r][gapStart] = false;
+                    if (gapStart + 1 < cols) {
+                        grid[r][gapStart + 1] = false;
+                    }
+                }
+                
+                // 同步镜像行
+                const mirroredRow = rows - 1 - r;
+                for (let c = 0; c < cols; c++) {
+                    grid[mirroredRow][cols - 1 - c] = grid[r][c];
+                }
+            }
+        }
+        
+        // 同样确保每列也有一个通行缺口（防止完全垂直封锁）
+        for (let c = 0; c < cols; c++) {
+            let hasGap = false;
+            let consecutiveEmpty = 0;
+            
+            for (let r = 0; r < rows; r++) {
+                if (!grid[r][c]) {
+                    consecutiveEmpty++;
+                    if (consecutiveEmpty >= 2) {
+                        hasGap = true;
+                        break;
+                    }
+                } else {
+                    consecutiveEmpty = 0;
+                }
+            }
+            
+            if (!hasGap) {
+                // 强制创建垂直缺口
+                const gapStart = Math.floor(Math.random() * Math.max(1, rows - 2));
+                grid[gapStart][c] = false;
+                if (gapStart + 1 < rows) {
+                    grid[gapStart + 1][c] = false;
+                }
+            }
+        }
+        
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
                 if (grid[r][c]) {
@@ -320,8 +412,8 @@ class ObstacleManager {
             }
         }
         
-        const centerX = 700;
-        const centerY = 450;
+        const centerX = mapWidth / 2;
+        const centerY = mapHeight / 2;
         const centerCheckRadius = 150;
         
         const hasCenterObstacle = this.obstacles.some(obs => {
